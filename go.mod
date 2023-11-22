@@ -1,4 +1,5 @@
-module github.com/kubeedge/sedna
+<!-- module github.com/kubeedge/sedna -->
+module github.com/AdaYangOlzz/sedna-modified
 
 go 1.16
 

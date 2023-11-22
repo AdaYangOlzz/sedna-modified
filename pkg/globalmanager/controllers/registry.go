@@ -22,13 +22,14 @@ import (
 	fl "github.com/kubeedge/sedna/pkg/globalmanager/controllers/federatedlearning"
 	il "github.com/kubeedge/sedna/pkg/globalmanager/controllers/incrementallearning"
 	ji "github.com/kubeedge/sedna/pkg/globalmanager/controllers/jointinference"
-	// TODO: mulji路径
+	// DONE: mulji路径
 	// mulji 
+	mulji "github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/controllers/jointmultiedge"
 	ll "github.com/kubeedge/sedna/pkg/globalmanager/controllers/lifelonglearning"
 	objs "github.com/kubeedge/sedna/pkg/globalmanager/controllers/objectsearch"
 	reid "github.com/kubeedge/sedna/pkg/globalmanager/controllers/reid"
 	va "github.com/kubeedge/sedna/pkg/globalmanager/controllers/videoanalytics"
-	"github.com/kubeedge/sedna/pkg/globalmanager/runtime"
+	"github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/runtime"
 )
 
 type FeatureFactory = func(*runtime.ControllerContext) (runtime.FeatureControllerI, error)

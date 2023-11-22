@@ -25,6 +25,8 @@ class K8sResourceKind(Enum):
     VIDEO_ANALYTICS_JOB = "videoanalyticsjob"
     FEATURE_EXTRACTION_SERVICE = "featureextractionservice"
     JOINT_INFERENCE_SERVICE = "jointinferenceservice"
+    JOINT_MULTIEDGE_SERVICE = "jointmultiedgeservice"
+
     FEDERATED_LEARNING_JOB = "federatedlearningjob"
     INCREMENTAL_JOB = "incrementallearningjob"
     LIFELONG_JOB = "lifelonglearningjob"

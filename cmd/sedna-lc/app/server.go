@@ -26,18 +26,19 @@ import (
 	"k8s.io/component-base/cli/globalflag"
 	"k8s.io/klog/v2"
 
-	"github.com/kubeedge/sedna/cmd/sedna-lc/app/options"
-	"github.com/kubeedge/sedna/pkg/localcontroller/common/constants"
-	"github.com/kubeedge/sedna/pkg/localcontroller/gmclient"
-	"github.com/kubeedge/sedna/pkg/localcontroller/managers"
-	"github.com/kubeedge/sedna/pkg/localcontroller/managers/dataset"
-	"github.com/kubeedge/sedna/pkg/localcontroller/managers/federatedlearning"
-	"github.com/kubeedge/sedna/pkg/localcontroller/managers/incrementallearning"
-	"github.com/kubeedge/sedna/pkg/localcontroller/managers/jointinference"
-	"github.com/kubeedge/sedna/pkg/localcontroller/managers/lifelonglearning"
-	"github.com/kubeedge/sedna/pkg/localcontroller/managers/model"
-	"github.com/kubeedge/sedna/pkg/localcontroller/server"
-	"github.com/kubeedge/sedna/pkg/version/verflag"
+	"github.com/adayangolzz/sedna-modified/cmd/sedna-lc/app/options"
+	"github.com/adayangolzz/sedna-modified/pkg/localcontroller/common/constants"
+	"github.com/adayangolzz/sedna-modified/pkg/localcontroller/gmclient"
+	"github.com/adayangolzz/sedna-modified/pkg/localcontroller/managers"
+	"github.com/adayangolzz/sedna-modified/pkg/localcontroller/managers/dataset"
+	"github.com/adayangolzz/sedna-modified/pkg/localcontroller/managers/federatedlearning"
+	"github.com/adayangolzz/sedna-modified/pkg/localcontroller/managers/incrementallearning"
+	"github.com/adayangolzz/sedna-modified/pkg/localcontroller/managers/jointinference"
+	"github.com/adayangolzz/sedna-modified/pkg/localcontroller/managers/jointmultiedge"
+	"github.com/adayangolzz/sedna-modified/pkg/localcontroller/managers/lifelonglearning"
+	"github.com/adayangolzz/sedna-modified/pkg/localcontroller/managers/model"
+	"github.com/adayangolzz/sedna-modified/pkg/localcontroller/server"
+	"github.com/adayangolzz/sedna-modified/pkg/version/verflag"
 )
 
 var (
@@ -98,6 +99,8 @@ func runServer() {
 
 	jm := jointinference.New(c)
 
+	jmm := jointmultiedge.New(c)
+
 	fm := federatedlearning.New(c)
 
 	im := incrementallearning.New(c, dm, mm, Options)
@@ -107,7 +110,7 @@ func runServer() {
 	s := server.New(Options)
 
 	for _, m := range []managers.FeatureManager{
-		dm, mm, jm, fm, im, lm,
+		dm, mm, jm, jmm, fm, im, lm,
 	} {
 		s.AddFeatureManager(m)
 		c.Subscribe(m)

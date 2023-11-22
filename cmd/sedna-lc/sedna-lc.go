@@ -21,7 +21,7 @@ import (
 
 	"k8s.io/component-base/logs"
 
-	"github.com/kubeedge/sedna/cmd/sedna-lc/app"
+	"github.com/adayangolzz/sedna-modified/cmd/sedna-lc/app"
 )
 
 func main() {

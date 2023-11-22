@@ -27,10 +27,10 @@ import (
 	"k8s.io/component-base/term"
 	"k8s.io/klog/v2"
 
-	"github.com/kubeedge/sedna/cmd/sedna-gm/app/options"
-	controller "github.com/kubeedge/sedna/pkg/globalmanager/controllers"
-	"github.com/kubeedge/sedna/pkg/util"
-	"github.com/kubeedge/sedna/pkg/version/verflag"
+	"github.com/adayangolzz/sedna-modified/cmd/sedna-gm/app/options"
+	controller "github.com/adayangolzz/sedna-modified/pkg/globalmanager/controllers"
+	"github.com/adayangolzz/sedna-modified/pkg/util"
+	"github.com/adayangolzz/sedna-modified/pkg/version/verflag"
 )
 
 // PrintFlags logs the flags in the flagset

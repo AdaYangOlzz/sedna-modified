@@ -22,8 +22,9 @@ import (
 	"context"
 
 	// v1alpha1 "github.com/kubeedge/sedna/pkg/apis/sedna/v1alpha1"
-	// TODO: v1alpha1路径确认
-	v1alpha1 "pkg/apis/sedna/v1alpha1"
+	// TODO: v1alpha1路径确认 (DONE.)
+	v1alpha1 "github.com/AdaYangOlzz/sedna-modified/pkg/apis/sedna/v1alpha1"
+
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
