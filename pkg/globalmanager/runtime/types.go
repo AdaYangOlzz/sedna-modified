@@ -19,7 +19,7 @@ package runtime
 import (
 	"time"
 
-	"github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/config"
+	"github.com/adayangolzz/sedna-modified/pkg/globalmanager/config"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	k8sruntime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -27,8 +27,8 @@ import (
 	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 
-	sednaclientset "github.com/AdaYangOlzz/sedna-modified/pkg/client/clientset/versioned"
-	sednainformers "github.com/AdaYangOlzz/sedna-modified/pkg/client/informers/externalversions"
+	sednaclientset "github.com/adayangolzz/sedna-modified/pkg/client/clientset/versioned"
+	sednainformers "github.com/adayangolzz/sedna-modified/pkg/client/informers/externalversions"
 )
 
 const (

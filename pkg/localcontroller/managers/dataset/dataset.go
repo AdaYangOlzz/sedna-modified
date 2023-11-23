@@ -27,14 +27,14 @@ import (
 
 	"k8s.io/klog/v2"
 
-	"github.com/AdaYangOlzz/sedna-modified/cmd/sedna-lc/app/options"
-	sednav1 "github.com/AdaYangOlzz/sedna-modified/pkg/apis/sedna/v1alpha1"
-	"github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/runtime"
-	"github.com/AdaYangOlzz/sedna-modified/pkg/localcontroller/db"
-	clienttypes "github.com/AdaYangOlzz/sedna-modified/pkg/localcontroller/gmclient"
-	"github.com/AdaYangOlzz/sedna-modified/pkg/localcontroller/storage"
-	"github.com/AdaYangOlzz/sedna-modified/pkg/localcontroller/util"
-	workertypes "github.com/AdaYangOlzz/sedna-modified/pkg/localcontroller/worker"
+	"github.com/adayangolzz/sedna-modified/cmd/sedna-lc/app/options"
+	sednav1 "github.com/adayangolzz/sedna-modified/pkg/apis/sedna/v1alpha1"
+	"github.com/adayangolzz/sedna-modified/pkg/globalmanager/runtime"
+	"github.com/adayangolzz/sedna-modified/pkg/localcontroller/db"
+	clienttypes "github.com/adayangolzz/sedna-modified/pkg/localcontroller/gmclient"
+	"github.com/adayangolzz/sedna-modified/pkg/localcontroller/storage"
+	"github.com/adayangolzz/sedna-modified/pkg/localcontroller/util"
+	workertypes "github.com/adayangolzz/sedna-modified/pkg/localcontroller/worker"
 )
 
 const (

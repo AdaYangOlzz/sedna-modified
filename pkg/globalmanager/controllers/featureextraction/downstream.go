@@ -19,7 +19,7 @@ package featureextraction
 import (
 	"k8s.io/apimachinery/pkg/watch"
 
-	"github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/runtime"
+	"github.com/adayangolzz/sedna-modified/pkg/globalmanager/runtime"
 )
 
 // NOTE: For this job we don't need synchronization

@@ -20,7 +20,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/config"
+	"github.com/adayangolzz/sedna-modified/pkg/globalmanager/config"
 )
 
 // KubeConfig from flags

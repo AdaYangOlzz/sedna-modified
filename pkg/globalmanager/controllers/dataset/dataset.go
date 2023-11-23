@@ -21,9 +21,9 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 
-	sednaclientset "github.com/AdaYangOlzz/sedna-modified/pkg/client/clientset/versioned/typed/sedna/v1alpha1"
-	"github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/config"
-	"github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/runtime"
+	sednaclientset "github.com/adayangolzz/sedna-modified/pkg/client/clientset/versioned/typed/sedna/v1alpha1"
+	"github.com/adayangolzz/sedna-modified/pkg/globalmanager/config"
+	"github.com/adayangolzz/sedna-modified/pkg/globalmanager/runtime"
 )
 
 const (

@@ -23,7 +23,7 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	"github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/messagelayer/model"
+	"github.com/adayangolzz/sedna-modified/pkg/globalmanager/messagelayer/model"
 )
 
 // Server defines websocket protocol server

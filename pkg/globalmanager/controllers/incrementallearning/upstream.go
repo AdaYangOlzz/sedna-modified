@@ -22,8 +22,8 @@ import (
 	"fmt"
 	"strings"
 
-	sednav1 "github.com/AdaYangOlzz/sedna-modified/pkg/apis/sedna/v1alpha1"
-	"github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/runtime"
+	sednav1 "github.com/adayangolzz/sedna-modified/pkg/apis/sedna/v1alpha1"
+	"github.com/adayangolzz/sedna-modified/pkg/globalmanager/runtime"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

@@ -120,7 +120,7 @@ setup(
     long_description=_infos.long_desc,
     long_description_content_type="text/markdown",
     license="Apache License 2.0",
-    url="https://github.com/AdaYangOlzz/sedna-modified",
+    url="https://github.com/adayangolzz/sedna-modified",
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: Apache Software License",

@@ -19,8 +19,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	// v1alpha1 "github.com/AdaYangOlzz/sedna-modified/pkg/apis/sedna/v1alpha1"
-	// "github.com/AdaYangOlzz/sedna-modified/pkg/client/clientset/versioned/scheme"
+	// v1alpha1 "github.com/adayangolzz/sedna-modified/pkg/apis/sedna/v1alpha1"
+	// "github.com/adayangolzz/sedna-modified/pkg/client/clientset/versioned/scheme"
 	v1alpha1 "github.com/adayangolzz/sedna-modified/pkg/apis/sedna/v1alpha1"
 	"github.com/adayangolzz/sedna-modified/pkg/client/clientset/versioned/scheme"
 	rest "k8s.io/client-go/rest"

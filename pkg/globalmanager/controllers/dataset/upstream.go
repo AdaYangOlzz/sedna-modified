@@ -22,8 +22,8 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	sednav1 "github.com/AdaYangOlzz/sedna-modified/pkg/apis/sedna/v1alpha1"
-	"github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/runtime"
+	sednav1 "github.com/adayangolzz/sedna-modified/pkg/apis/sedna/v1alpha1"
+	"github.com/adayangolzz/sedna-modified/pkg/globalmanager/runtime"
 )
 
 // updateFromEdge syncs update from edge

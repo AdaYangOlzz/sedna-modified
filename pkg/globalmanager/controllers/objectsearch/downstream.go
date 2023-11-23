@@ -17,7 +17,7 @@ limitations under the License.
 package objectsearch
 
 import (
-	"github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/runtime"
+	"github.com/adayangolzz/sedna-modified/pkg/globalmanager/runtime"
 )
 
 // TODO: sync the object search service info to edge nodes
