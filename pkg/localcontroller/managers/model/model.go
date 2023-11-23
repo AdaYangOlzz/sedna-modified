@@ -19,11 +19,11 @@ package model
 import (
 	"encoding/json"
 
-	sednav1 "github.com/kubeedge/sedna/pkg/apis/sedna/v1alpha1"
-	"github.com/kubeedge/sedna/pkg/localcontroller/db"
-	clienttypes "github.com/kubeedge/sedna/pkg/localcontroller/gmclient"
-	"github.com/kubeedge/sedna/pkg/localcontroller/util"
-	workertypes "github.com/kubeedge/sedna/pkg/localcontroller/worker"
+	sednav1 "github.com/AdaYangOlzz/sedna-modified/pkg/apis/sedna/v1alpha1"
+	"github.com/AdaYangOlzz/sedna-modified/pkg/localcontroller/db"
+	clienttypes "github.com/AdaYangOlzz/sedna-modified/pkg/localcontroller/gmclient"
+	"github.com/AdaYangOlzz/sedna-modified/pkg/localcontroller/util"
+	workertypes "github.com/AdaYangOlzz/sedna-modified/pkg/localcontroller/worker"
 )
 
 // ModelManager defines model manager

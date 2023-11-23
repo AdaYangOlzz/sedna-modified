@@ -17,7 +17,7 @@ limitations under the License.
 package objectsearch
 
 import (
-	"github.com/kubeedge/sedna/pkg/globalmanager/runtime"
+	"github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/runtime"
 )
 
 // TODO: updateFromEdge syncs the edge updates to k8s

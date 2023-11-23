@@ -26,8 +26,8 @@ import (
 	"gorm.io/gorm"
 	"k8s.io/klog/v2"
 
-	"github.com/kubeedge/sedna/pkg/localcontroller/common/constants"
-	"github.com/kubeedge/sedna/pkg/localcontroller/util"
+	"github.com/AdaYangOlzz/sedna-modified/pkg/localcontroller/common/constants"
+	"github.com/AdaYangOlzz/sedna-modified/pkg/localcontroller/util"
 )
 
 // Resource defines resource (e.g., dataset, model, jointinferenceservice) table

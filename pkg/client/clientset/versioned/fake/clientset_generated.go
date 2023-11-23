@@ -19,10 +19,10 @@ limitations under the License.
 package fake
 
 import (
-	// clientset "github.com/kubeedge/sedna/pkg/client/clientset/versioned"
+	// clientset "github.com/AdaYangOlzz/sedna-modified/pkg/client/clientset/versioned"
 	clientset "github.com/adayangolzz/sedna-modified/pkg/client/clientset/versioned"
-	// sednav1alpha1 "github.com/kubeedge/sedna/pkg/client/clientset/versioned/typed/sedna/v1alpha1"
-	// fakesednav1alpha1 "github.com/kubeedge/sedna/pkg/client/clientset/versioned/typed/sedna/v1alpha1/fake"
+	// sednav1alpha1 "github.com/AdaYangOlzz/sedna-modified/pkg/client/clientset/versioned/typed/sedna/v1alpha1"
+	// fakesednav1alpha1 "github.com/AdaYangOlzz/sedna-modified/pkg/client/clientset/versioned/typed/sedna/v1alpha1/fake"
 	
 	sednav1alpha1 "github.com/AdaYangOlzz/sedna-modified/pkg/client/clientset/versioned/typed/sedna/v1alpha1"
 	fakesednav1alpha1 "github.com/AdaYangOlzz/sedna-modified/pkg/client/clientset/versioned/typed/sedna/v1alpha1/fake"

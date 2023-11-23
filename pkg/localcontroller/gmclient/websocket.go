@@ -26,8 +26,8 @@ import (
 	"github.com/gorilla/websocket"
 	"k8s.io/klog/v2"
 
-	"github.com/kubeedge/sedna/cmd/sedna-lc/app/options"
-	"github.com/kubeedge/sedna/pkg/localcontroller/common/constants"
+	"github.com/AdaYangOlzz/sedna-modified/cmd/sedna-lc/app/options"
+	"github.com/AdaYangOlzz/sedna-modified/pkg/localcontroller/common/constants"
 )
 
 // wsClient defines a websocket client

@@ -24,7 +24,7 @@ import (
 	"k8s.io/klog/v2"
 	"sigs.k8s.io/yaml"
 
-	"github.com/kubeedge/sedna/pkg/util"
+	"github.com/AdaYangOlzz/sedna-modified/pkg/util"
 )
 
 const (

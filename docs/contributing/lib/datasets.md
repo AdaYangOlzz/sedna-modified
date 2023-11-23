@@ -114,7 +114,7 @@ import unittest
 
 def _load_txt_dataset(dataset_url):
     # use original dataset url,
-    # see https://github.com/kubeedge/sedna/issues/35
+    # see https://github.com/AdaYangOlzz/sedna-modified/issues/35
     return os.path.abspath(dataset_url)
 
 

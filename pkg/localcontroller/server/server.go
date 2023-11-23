@@ -23,10 +23,10 @@ import (
 	"github.com/emicklei/go-restful/v3"
 	"k8s.io/klog/v2"
 
-	"github.com/kubeedge/sedna/cmd/sedna-lc/app/options"
-	"github.com/kubeedge/sedna/pkg/localcontroller/common/constants"
-	"github.com/kubeedge/sedna/pkg/localcontroller/managers"
-	workertypes "github.com/kubeedge/sedna/pkg/localcontroller/worker"
+	"github.com/AdaYangOlzz/sedna-modified/cmd/sedna-lc/app/options"
+	"github.com/AdaYangOlzz/sedna-modified/pkg/localcontroller/common/constants"
+	"github.com/AdaYangOlzz/sedna-modified/pkg/localcontroller/managers"
+	workertypes "github.com/AdaYangOlzz/sedna-modified/pkg/localcontroller/worker"
 )
 
 // Server defines server

@@ -17,8 +17,8 @@ limitations under the License.
 package gmclient
 
 import (
-	messagetypes "github.com/kubeedge/sedna/pkg/globalmanager/messagelayer/model"
-	"github.com/kubeedge/sedna/pkg/globalmanager/runtime"
+	messagetypes "github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/messagelayer/model"
+	"github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/runtime"
 )
 
 const (

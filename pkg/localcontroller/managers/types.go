@@ -17,8 +17,8 @@ limitations under the License.
 package managers
 
 import (
-	clienttype "github.com/kubeedge/sedna/pkg/localcontroller/gmclient"
-	workertypes "github.com/kubeedge/sedna/pkg/localcontroller/worker"
+	clienttype "github.com/AdaYangOlzz/sedna-modified/pkg/localcontroller/gmclient"
+	workertypes "github.com/AdaYangOlzz/sedna-modified/pkg/localcontroller/worker"
 )
 
 // FeatureManager defines feature managers

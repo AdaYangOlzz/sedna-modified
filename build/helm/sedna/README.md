@@ -1,11 +1,11 @@
 # Sedna Helm Charts
 
-Visit https://github.com/kubeedge/sedna for more information.
+Visit https://github.com/AdaYangOlzz/sedna-modified for more information.
 
 ## Install
 
 ```
-$ git clone https://github.com/kubeedge/sedna.git
+$ git clone https://github.com/AdaYangOlzz/sedna-modified.git
 $ cd sedna
 $ helm install sedna ./build/helm/sedna
 ```

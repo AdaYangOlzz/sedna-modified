@@ -25,8 +25,8 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/klog/v2"
 
-	"github.com/kubeedge/sedna/pkg/globalmanager/messagelayer/model"
-	wsContext "github.com/kubeedge/sedna/pkg/globalmanager/messagelayer/ws"
+	"github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/messagelayer/model"
+	wsContext "github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/messagelayer/ws"
 )
 
 // MessageLayer define all functions that message layer must implement

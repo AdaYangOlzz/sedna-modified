@@ -21,7 +21,7 @@ package internalinterfaces
 import (
 	time "time"
 
-	// versioned "github.com/kubeedge/sedna/pkg/client/clientset/versioned"
+	// versioned "github.com/AdaYangOlzz/sedna-modified/pkg/client/clientset/versioned"
 	versioned "github.com/adayangolzz/sedna-modified/pkg/client/clientset/versioned"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"

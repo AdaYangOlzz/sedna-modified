@@ -30,17 +30,17 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
 
-	"github.com/kubeedge/sedna/cmd/sedna-lc/app/options"
-	sednav1 "github.com/kubeedge/sedna/pkg/apis/sedna/v1alpha1"
-	gmtypes "github.com/kubeedge/sedna/pkg/globalmanager/controllers/lifelonglearning"
-	"github.com/kubeedge/sedna/pkg/globalmanager/runtime"
-	"github.com/kubeedge/sedna/pkg/localcontroller/db"
-	clienttypes "github.com/kubeedge/sedna/pkg/localcontroller/gmclient"
-	"github.com/kubeedge/sedna/pkg/localcontroller/managers/dataset"
-	"github.com/kubeedge/sedna/pkg/localcontroller/storage"
-	"github.com/kubeedge/sedna/pkg/localcontroller/trigger"
-	"github.com/kubeedge/sedna/pkg/localcontroller/util"
-	workertypes "github.com/kubeedge/sedna/pkg/localcontroller/worker"
+	"github.com/AdaYangOlzz/sedna-modified/cmd/sedna-lc/app/options"
+	sednav1 "github.com/AdaYangOlzz/sedna-modified/pkg/apis/sedna/v1alpha1"
+	gmtypes "github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/controllers/lifelonglearning"
+	"github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/runtime"
+	"github.com/AdaYangOlzz/sedna-modified/pkg/localcontroller/db"
+	clienttypes "github.com/AdaYangOlzz/sedna-modified/pkg/localcontroller/gmclient"
+	"github.com/AdaYangOlzz/sedna-modified/pkg/localcontroller/managers/dataset"
+	"github.com/AdaYangOlzz/sedna-modified/pkg/localcontroller/storage"
+	"github.com/AdaYangOlzz/sedna-modified/pkg/localcontroller/trigger"
+	"github.com/AdaYangOlzz/sedna-modified/pkg/localcontroller/util"
+	workertypes "github.com/AdaYangOlzz/sedna-modified/pkg/localcontroller/worker"
 	"github.com/microcosm-cc/bluemonday"
 )
 
@@ -284,7 +284,7 @@ func (lm *Manager) evalTask(job *Job) error {
 		// This trigger indicate that LC has told GM to trigger Eval worker,
 		// And the state of worker on the edge will be 'ready', then to 'completed'.
 		// Please don't confuse the two concepts with the state in the state transition diagram.
-		// https://github.com/kubeedge/sedna/blob/main/docs/proposals/images/incremental-learning-state-machine.png
+		// https://github.com/AdaYangOlzz/sedna-modified/blob/main/docs/proposals/images/incremental-learning-state-machine.png
 		if jobConfig.EvalTriggerStatus == TriggerReadyStatus {
 			payload, err := lm.triggerEvalTask(job)
 			if err != nil {

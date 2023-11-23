@@ -21,12 +21,12 @@ import (
 
 	"k8s.io/klog/v2"
 
-	sednav1 "github.com/kubeedge/sedna/pkg/apis/sedna/v1alpha1"
-	"github.com/kubeedge/sedna/pkg/localcontroller/db"
-	clienttypes "github.com/kubeedge/sedna/pkg/localcontroller/gmclient"
-	types "github.com/kubeedge/sedna/pkg/localcontroller/managers"
-	"github.com/kubeedge/sedna/pkg/localcontroller/util"
-	workertypes "github.com/kubeedge/sedna/pkg/localcontroller/worker"
+	sednav1 "github.com/AdaYangOlzz/sedna-modified/pkg/apis/sedna/v1alpha1"
+	"github.com/AdaYangOlzz/sedna-modified/pkg/localcontroller/db"
+	clienttypes "github.com/AdaYangOlzz/sedna-modified/pkg/localcontroller/gmclient"
+	types "github.com/AdaYangOlzz/sedna-modified/pkg/localcontroller/managers"
+	"github.com/AdaYangOlzz/sedna-modified/pkg/localcontroller/util"
+	workertypes "github.com/AdaYangOlzz/sedna-modified/pkg/localcontroller/worker"
 )
 
 // FederatedLearningManager defines federated-learning-job manager

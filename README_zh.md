@@ -1,7 +1,7 @@
 简体中文 | [English](./README.md)
 # Sedna
-[![CI](https://github.com/kubeedge/sedna/workflows/CI/badge.svg?branch=main)](https://github.com/kubeedge/sedna/actions)
-[![Go Report Card](https://goreportcard.com/badge/github.com/kubeedge/sedna)](https://goreportcard.com/report/github.com/kubeedge/sedna)
+[![CI](https://github.com/AdaYangOlzz/sedna-modified/workflows/CI/badge.svg?branch=main)](https://github.com/AdaYangOlzz/sedna-modified/actions)
+[![Go Report Card](https://goreportcard.com/badge/github.com/AdaYangOlzz/sedna-modified)](https://goreportcard.com/report/github.com/AdaYangOlzz/sedna-modified)
 [![LICENSE](https://img.shields.io/github/license/kubeedge/sedna.svg)](/LICENSE)
 
 ## 什么是Sedna?

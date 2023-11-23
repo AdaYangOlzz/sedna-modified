@@ -41,11 +41,11 @@ import (
 	"k8s.io/klog/v2"
 	k8scontroller "k8s.io/kubernetes/pkg/controller"
 
-	sednav1 "github.com/kubeedge/sedna/pkg/apis/sedna/v1alpha1"
-	sednaclientset "github.com/kubeedge/sedna/pkg/client/clientset/versioned/typed/sedna/v1alpha1"
-	sednav1listers "github.com/kubeedge/sedna/pkg/client/listers/sedna/v1alpha1"
-	"github.com/kubeedge/sedna/pkg/globalmanager/config"
-	"github.com/kubeedge/sedna/pkg/globalmanager/runtime"
+	sednav1 "github.com/AdaYangOlzz/sedna-modified/pkg/apis/sedna/v1alpha1"
+	sednaclientset "github.com/AdaYangOlzz/sedna-modified/pkg/client/clientset/versioned/typed/sedna/v1alpha1"
+	sednav1listers "github.com/AdaYangOlzz/sedna-modified/pkg/client/listers/sedna/v1alpha1"
+	"github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/config"
+	"github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/runtime"
 )
 
 const (
@@ -669,7 +669,7 @@ func (c *Controller) createPod(job *sednav1.LifelongLearningJob, podtype sednav1
 				EnvName: "TRAIN_DATASET_URL",
 			},
 
-			// see https://github.com/kubeedge/sedna/issues/35
+			// see https://github.com/AdaYangOlzz/sedna-modified/issues/35
 			runtime.WorkerMount{
 				URL: &runtime.MountURL{
 					Secret:                datasetSecret,

@@ -23,8 +23,8 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/kubeedge/sedna/pkg/globalmanager/runtime"
-	"github.com/kubeedge/sedna/pkg/localcontroller/util"
+	"github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/runtime"
+	"github.com/AdaYangOlzz/sedna-modified/pkg/localcontroller/util"
 )
 
 const (

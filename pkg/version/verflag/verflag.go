@@ -23,7 +23,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/kubeedge/sedna/pkg/version"
+	"github.com/AdaYangOlzz/sedna-modified/pkg/version"
 
 	flag "github.com/spf13/pflag"
 )

@@ -17,18 +17,18 @@ limitations under the License.
 package controllers
 
 import (
-	"github.com/kubeedge/sedna/pkg/globalmanager/controllers/dataset"
-	fe "github.com/kubeedge/sedna/pkg/globalmanager/controllers/featureextraction"
-	fl "github.com/kubeedge/sedna/pkg/globalmanager/controllers/federatedlearning"
-	il "github.com/kubeedge/sedna/pkg/globalmanager/controllers/incrementallearning"
-	ji "github.com/kubeedge/sedna/pkg/globalmanager/controllers/jointinference"
+	"github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/controllers/dataset"
+	fe "github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/controllers/featureextraction"
+	fl "github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/controllers/federatedlearning"
+	il "github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/controllers/incrementallearning"
+	ji "github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/controllers/jointinference"
 	// DONE: mulji路径
 	// mulji 
 	mulji "github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/controllers/jointmultiedge"
-	ll "github.com/kubeedge/sedna/pkg/globalmanager/controllers/lifelonglearning"
-	objs "github.com/kubeedge/sedna/pkg/globalmanager/controllers/objectsearch"
-	reid "github.com/kubeedge/sedna/pkg/globalmanager/controllers/reid"
-	va "github.com/kubeedge/sedna/pkg/globalmanager/controllers/videoanalytics"
+	ll "github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/controllers/lifelonglearning"
+	objs "github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/controllers/objectsearch"
+	reid "github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/controllers/reid"
+	va "github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/controllers/videoanalytics"
 	"github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/runtime"
 )
 

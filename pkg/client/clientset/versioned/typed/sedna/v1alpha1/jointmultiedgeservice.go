@@ -22,8 +22,8 @@ import (
 	"context"
 	"time"
 	// TODO: v1alpha1路径问题
-	// v1alpha1 "github.com/kubeedge/sedna/pkg/apis/sedna/v1alpha1"
-	// scheme "github.com/kubeedge/sedna/pkg/client/clientset/versioned/scheme"
+	// v1alpha1 "github.com/AdaYangOlzz/sedna-modified/pkg/apis/sedna/v1alpha1"
+	// scheme "github.com/AdaYangOlzz/sedna-modified/pkg/client/clientset/versioned/scheme"
 	v1alpha1 "github.com/adayangolzz/sedna-modified/pkg/apis/sedna/v1alpha1"
 	scheme "github.com/adayangolzz/sedna-modified/pkg/client/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"

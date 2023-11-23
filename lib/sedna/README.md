@@ -15,7 +15,7 @@ The build process is tested with Python 3.6, Ubuntu 18.04.5 LTS
 
 ```bash
 # Clone the repo
-git clone --recursive https://github.com/kubeedge/sedna.git
+git clone --recursive https://github.com/AdaYangOlzz/sedna-modified.git
 cd sedna/lib
 
 # Build the pip package

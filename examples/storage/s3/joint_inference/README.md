@@ -146,4 +146,4 @@ EOF
 ```
 
 ### Mock Video Stream for Inference in Edge Side
-Refer to [here](https://github.com/kubeedge/sedna/tree/main/examples/joint_inference/helmet_detection_inference#mock-video-stream-for-inference-in-edge-side).
+Refer to [here](https://github.com/AdaYangOlzz/sedna-modified/tree/main/examples/joint_inference/helmet_detection_inference#mock-video-stream-for-inference-in-edge-side).

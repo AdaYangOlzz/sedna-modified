@@ -22,8 +22,8 @@ import (
 
 	"k8s.io/klog/v2"
 
-	"github.com/kubeedge/sedna/pkg/globalmanager/messagelayer"
-	"github.com/kubeedge/sedna/pkg/globalmanager/runtime"
+	"github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/messagelayer"
+	"github.com/AdaYangOlzz/sedna-modified/pkg/globalmanager/runtime"
 )
 
 // UpstreamController subscribes the updates from edge and syncs to k8s api server

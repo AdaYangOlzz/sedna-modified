@@ -35,7 +35,7 @@ make
 ### Add or Update API
 If you add or update APIs in `pkg/apis/`, you need to run:
 1. run `bash hack/update-codegen.sh` to update client-go code in `pkg/client`.
-	> **Note**: you need to checkout the code to `$GOPATH/src/github.com/kubeedge/sedna`.
+	> **Note**: you need to checkout the code to `$GOPATH/src/github.com/AdaYangOlzz/sedna-modified`.
 1. run `make crds` to update the api definition.
 1. run `kubectl replace -f build/crds/` to update your kubernetes environment.
 
