@@ -88,7 +88,7 @@ func (v *version) JointInferenceServices() JointInferenceServiceInformer {
 
 // JointMultiEdgeServices returns a JointMultiEdgeServiceInformer.
 func (v *version) JointMultiEdgeServices() JointMultiEdgeServiceInformer {
-	return &JointMultiEdgeServiceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+	return &jointMultiEdgeServiceInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
 // LifelongLearningJobs returns a LifelongLearningJobInformer.

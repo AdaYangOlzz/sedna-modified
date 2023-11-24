@@ -467,7 +467,7 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService, b
 }
 
 // modified: 由于service.Spec.EdgeWorker是[]EdgeWorker类型,所以进行遍历
-func (c *Controller) createEdgeWorkers(service *sednav1.JointMultiEdgeService, bigModelHost string, bigModelPort int32) error {
+func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bigModelHost string, bigModelPort int32) error {
     ctx := context.Background()
 
     for _, edgeWorker := range service.Spec.EdgeWorker {

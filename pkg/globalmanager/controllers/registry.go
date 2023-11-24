@@ -39,8 +39,8 @@ type Registry map[string]FeatureFactory
 func NewRegistry() Registry {
 	return Registry{
 		ji.Name:      ji.New,
-		// TODO:
-		// mulji.Name:	  mulji.New,
+		// DONE:
+		mulji.Name:	  mulji.New,
 		fe.Name:      fe.New,
 		fl.Name:      fl.New,
 		il.Name:      il.New,

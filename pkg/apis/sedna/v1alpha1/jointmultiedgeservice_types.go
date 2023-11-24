@@ -46,33 +46,33 @@ type JointMultiEdgeServiceSpec struct {
 }
 
 // EdgeWorker describes the data a edge worker should have
-type EdgeWorker struct {
-	Model             SmallModel         `json:"model"`
-	HardExampleMining HardExampleMining  `json:"hardExampleMining"`
-	Template          v1.PodTemplateSpec `json:"template"`
-}
+// type EdgeWorker struct {
+// 	Model             SmallModel         `json:"model"`
+// 	HardExampleMining HardExampleMining  `json:"hardExampleMining"`
+// 	Template          v1.PodTemplateSpec `json:"template"`
+// }
 
 // CloudWorker describes the data a cloud worker should have
-type CloudWorker struct {
-	Model    BigModel           `json:"model"`
-	Template v1.PodTemplateSpec `json:"template"`
-}
+// type CloudWorker struct {
+// 	Model    BigModel           `json:"model"`
+// 	Template v1.PodTemplateSpec `json:"template"`
+// }
 
 // SmallModel describes the small model
-type SmallModel struct {
-	Name string `json:"name"`
-}
+// type SmallModel struct {
+// 	Name string `json:"name"`
+// }
 
 // BigModel describes the big model
-type BigModel struct {
-	Name string `json:"name"`
-}
+// type BigModel struct {
+// 	Name string `json:"name"`
+// }
 
 // HardExampleMining describes the hard example algorithm to be used
-type HardExampleMining struct {
-	Name       string     `json:"name"`
-	Parameters []ParaSpec `json:"parameters,omitempty"`
-}
+// type HardExampleMining struct {
+// 	Name       string     `json:"name"`
+// 	Parameters []ParaSpec `json:"parameters,omitempty"`
+// }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
