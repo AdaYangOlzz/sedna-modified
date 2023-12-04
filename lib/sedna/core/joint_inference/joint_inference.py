@@ -144,8 +144,10 @@ class JointInference(JobBase):
 
     def __init__(self, estimator=None, hard_example_mining: dict = None):
         super(JointInference, self).__init__(estimator=estimator)
+        # 通过apiserver查看job_kind
         self.job_kind = K8sResourceKind.JOINT_INFERENCE_SERVICE.value
         self.local_ip = get_host_ip()
+        # 创建cloudWorker时写入ENV
         self.remote_ip = self.get_parameters(
             "BIG_MODEL_IP", self.local_ip)
         self.port = int(self.get_parameters("BIG_MODEL_PORT", "5000"))
@@ -167,6 +169,8 @@ class JointInference(JobBase):
 
         if callable(self.estimator):
             self.estimator = self.estimator()
+        # 加载模型
+        # BaseConfig: model_url = os.getenv("MODEL_URL")
         if not os.path.exists(self.model_path):
             raise FileExistsError(f"{self.model_path} miss")
         else:
@@ -246,7 +250,7 @@ class JointInference(JobBase):
         if callback_func:
             res = callback_func(res)
 
-        # 将lc的结果同步给云端(?)
+        # 将lc的结果同步给云端
         self.lc_reporter.update_for_edge_inference()
 
         is_hard_example = False

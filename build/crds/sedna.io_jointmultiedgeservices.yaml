@@ -7093,12 +7093,14 @@ spec:
                       type: object
                     model:
                       description: SmallModel describes the small model
-                      properties:
-                        name:
-                          type: string
-                      required:
-                      - name
-                      type: object
+                      items:
+                        properties:
+                          name:
+                            type: string
+                        required:
+                        - name
+                        type: object
+                      type: array
                     template:
                       description: PodTemplateSpec describes the data a pod should have
                         when created from a template
@@ -14109,7 +14111,6 @@ spec:
                           type: object
                       type: object
                   required:
-                  - hardExampleMining
                   - model
                   - template
                   type: object

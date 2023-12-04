@@ -18,11 +18,10 @@ package jointmultiedge
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
-
+	"strings"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -422,101 +421,233 @@ func (c *Controller) createWorkers(service *sednav1.JointMultiEdgeService) (acti
 	return active, err
 }
 
+// func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService, bigModelPort int32) error {
+// 	// deliver pod for cloudworker
+// 	cloudModelName := service.Spec.CloudWorker.Model.Name
+// 	cloudModel, err := c.client.Models(service.Namespace).Get(context.Background(), cloudModelName, metav1.GetOptions{})
+// 	if err != nil {
+// 		return fmt.Errorf("failed to get cloud model %s: %w",
+// 			cloudModelName, err)
+// 	}
+
+// 	var workerParam runtime.WorkerParam
+
+// 	secretName := cloudModel.Spec.CredentialName
+// 	var modelSecret *v1.Secret
+// 	if secretName != "" {
+// 		modelSecret, _ = c.kubeClient.CoreV1().Secrets(service.Namespace).Get(context.TODO(), secretName, metav1.GetOptions{})
+// 	}
+// 	workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
+// 		URL: &runtime.MountURL{
+// 			URL:                   cloudModel.Spec.URL,
+// 			Secret:                modelSecret,
+// 			DownloadByInitializer: true,
+// 		},
+// 		Name:    "model",
+// 		EnvName: "MODEL_URL",
+// 	})
+
+// 	workerParam.Env = map[string]string{
+// 		"NAMESPACE":    service.Namespace,
+// 		"SERVICE_NAME": service.Name,
+// 		"WORKER_NAME":  "cloudworker-" + utilrand.String(5),
+
+// 		"BIG_MODEL_BIND_PORT": strconv.Itoa(int(bigModelPort)),
+// 	}
+
+// 	workerParam.WorkerType = jointMultiEdgeForCloud
+
+// 	// create cloud pod
+// 	_, err = runtime.CreatePodWithTemplate(c.kubeClient,
+// 		service,
+// 		&service.Spec.CloudWorker.Template,
+// 		&workerParam)
+// 	return err
+// }
+
+
+// modified-v2: multiple models for cloud  modelName=url
 func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService, bigModelPort int32) error {
-	// deliver pod for cloudworker
-	cloudModelName := service.Spec.CloudWorker.Model.Name
-	cloudModel, err := c.client.Models(service.Namespace).Get(context.Background(), cloudModelName, metav1.GetOptions{})
-	if err != nil {
-		return fmt.Errorf("failed to get cloud model %s: %w",
-			cloudModelName, err)
+	ctx := context.Background()
+
+	var modelEnvVars []string
+	// 使用 cloudModel 中的 Name 字段
+	// 读取yaml中的cloudworker下的model array
+	// 去已经部署的model中找对应的
+	for _, cloudModel := range service.Spec.CloudWorker.Model {
+		cloudModelName := cloudModel.Name
+		cloudModel, err := c.client.Models(service.Namespace).Get(ctx, cloudModelName, metav1.GetOptions{})
+		if err != nil {
+			return fmt.Errorf("failed to get cloud model %s: %w", cloudModelName, err)
+		}
+
+		var workerParam runtime.WorkerParam
+
+		secretName := cloudModel.Spec.CredentialName
+		var modelSecret *v1.Secret
+		if secretName != "" {
+			modelSecret, _ = c.kubeClient.CoreV1().Secrets(service.Namespace).Get(ctx, secretName, metav1.GetOptions{})
+		}
+
+		workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
+			URL: &runtime.MountURL{
+				URL:                   cloudModel.Spec.URL,
+				Secret:                modelSecret,
+				DownloadByInitializer: true,
+			},
+			Name: "model",
+		})
+
+		// Add model name and URL to the environment variable list
+		modelEnvVars = append(modelEnvVars, fmt.Sprintf("%s=%s", cloudModelName, cloudModel.Spec.URL))
 	}
 
+	// Set the model URLs and names in the environment variable outside the loop
 	var workerParam runtime.WorkerParam
 
-	secretName := cloudModel.Spec.CredentialName
-	var modelSecret *v1.Secret
-	if secretName != "" {
-		modelSecret, _ = c.kubeClient.CoreV1().Secrets(service.Namespace).Get(context.TODO(), secretName, metav1.GetOptions{})
-	}
-	workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
-		URL: &runtime.MountURL{
-			URL:                   cloudModel.Spec.URL,
-			Secret:                modelSecret,
-			DownloadByInitializer: true,
-		},
-		Name:    "model",
-		EnvName: "MODEL_URL",
-	})
-
 	workerParam.Env = map[string]string{
-		"NAMESPACE":    service.Namespace,
-		"SERVICE_NAME": service.Name,
-		"WORKER_NAME":  "cloudworker-" + utilrand.String(5),
-
+		"NAMESPACE":          service.Namespace,
+		"SERVICE_NAME":       service.Name,
+		"WORKER_NAME":        "cloudworker-" + utilrand.String(5),
 		"BIG_MODEL_BIND_PORT": strconv.Itoa(int(bigModelPort)),
+		// model_info以;做分隔符
+		// "MODEL_INFO":         strings.Join(modelEnvVars, ";"),
+		"MODEL_URL":         strings.Join(modelEnvVars, ";"),
 	}
 
 	workerParam.WorkerType = jointMultiEdgeForCloud
 
 	// create cloud pod
-	_, err = runtime.CreatePodWithTemplate(c.kubeClient,
+	_, err := runtime.CreatePodWithTemplate(c.kubeClient,
 		service,
 		&service.Spec.CloudWorker.Template,
 		&workerParam)
 	return err
 }
 
+
+
 // modified: 由于service.Spec.EdgeWorker是[]EdgeWorker类型,所以进行遍历
+// func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bigModelHost string, bigModelPort int32) error {
+//     ctx := context.Background()
+
+//     for _, edgeWorker := range service.Spec.EdgeWorker {
+//         edgeModelName := edgeWorker.Model.Name
+//         edgeModel, err := c.client.Models(service.Namespace).Get(ctx, edgeModelName, metav1.GetOptions{})
+//         if err != nil {
+//             return fmt.Errorf("failed to get edge model %s: %w", edgeModelName, err)
+//         }
+
+//         secretName := edgeModel.Spec.CredentialName
+//         var modelSecret *v1.Secret
+//         if secretName != "" {
+//             modelSecret, _ = c.kubeClient.CoreV1().Secrets(service.Namespace).Get(context.TODO(), secretName, metav1.GetOptions{})
+//         }
+
+//         HEMParameterJSON, _ := json.Marshal(edgeWorker.HardExampleMining.Parameters)
+//         HEMParameterString := string(HEMParameterJSON)
+
+//         var workerParam runtime.WorkerParam
+
+//         workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
+//             URL: &runtime.MountURL{
+//                 URL:                   edgeModel.Spec.URL,
+//                 Secret:                modelSecret,
+//                 DownloadByInitializer: true,
+//             },
+//             Name:    "model",
+//             EnvName: "MODEL_URL",
+//         })
+
+//         workerParam.Env = map[string]string{
+//             "NAMESPACE":    service.Namespace,
+//             "SERVICE_NAME": service.Name,
+//             "WORKER_NAME":  "edgeworker-" + utilrand.String(5),
+
+//             "BIG_MODEL_IP":   bigModelHost,
+//             "BIG_MODEL_PORT": strconv.Itoa(int(bigModelPort)),
+
+//             "HEM_NAME":       edgeWorker.HardExampleMining.Name,
+//             "HEM_PARAMETERS": HEMParameterString,
+
+//             "LC_SERVER": c.cfg.LC.Server,
+//         }
+
+//         workerParam.WorkerType = jointMultiEdgeForEdge
+//         workerParam.HostNetwork = true
+
+//         // create edge pod
+//         _, err = runtime.CreatePodWithTemplate(c.kubeClient,
+//             service,
+//             &edgeWorker.Template,
+//             &workerParam)
+//         if err != nil {
+//             return err
+//         }
+//     }
+
+//     return nil
+// }
+
+// modified: model设置为array, 也需要遍历创建读取
 func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bigModelHost string, bigModelPort int32) error {
     ctx := context.Background()
 
     for _, edgeWorker := range service.Spec.EdgeWorker {
-        edgeModelName := edgeWorker.Model.Name
-        edgeModel, err := c.client.Models(service.Namespace).Get(ctx, edgeModelName, metav1.GetOptions{})
-        if err != nil {
-            return fmt.Errorf("failed to get edge model %s: %w", edgeModelName, err)
-        }
-
-        secretName := edgeModel.Spec.CredentialName
-        var modelSecret *v1.Secret
-        if secretName != "" {
-            modelSecret, _ = c.kubeClient.CoreV1().Secrets(service.Namespace).Get(context.TODO(), secretName, metav1.GetOptions{})
-        }
-
-        HEMParameterJSON, _ := json.Marshal(edgeWorker.HardExampleMining.Parameters)
-        HEMParameterString := string(HEMParameterJSON)
+        // Array to store model information (name and URL)
+        var modelInfo []string
 
         var workerParam runtime.WorkerParam
 
-        workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
-            URL: &runtime.MountURL{
-                URL:                   edgeModel.Spec.URL,
-                Secret:                modelSecret,
-                DownloadByInitializer: true,
-            },
-            Name:    "model",
-            EnvName: "MODEL_URL",
-        })
+        for _, edgeModel := range edgeWorker.Model {
+			// 使用 edgeModel 中的 Name 字段
+			edgeModelName := edgeModel.Name
+            edgeModel, err := c.client.Models(service.Namespace).Get(ctx, edgeModelName, metav1.GetOptions{})
+            if err != nil {
+                return fmt.Errorf("failed to get edge model %s: %w", edgeModelName, err)
+            }
+
+            secretName := edgeModel.Spec.CredentialName
+            var modelSecret *v1.Secret
+            if secretName != "" {
+                modelSecret, _ = c.kubeClient.CoreV1().Secrets(service.Namespace).Get(context.TODO(), secretName, metav1.GetOptions{})
+            }
+
+            // HEMParameterJSON, _ := json.Marshal(edgeWorker.HardExampleMining.Parameters)
+            // HEMParameterString := string(HEMParameterJSON)
+
+            // Append each model information (name and URL) to modelInfo array
+            modelInfo = append(modelInfo, fmt.Sprintf("%s=%s", edgeModelName, edgeModel.Spec.URL))
+
+            // Deal with a specific model in each iteration
+            workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
+                URL: &runtime.MountURL{
+                    URL:                   edgeModel.Spec.URL,
+                    Secret:                modelSecret,
+                    DownloadByInitializer: true,
+                },
+                Name: "model",
+            })
+        }
 
         workerParam.Env = map[string]string{
-            "NAMESPACE":    service.Namespace,
-            "SERVICE_NAME": service.Name,
-            "WORKER_NAME":  "edgeworker-" + utilrand.String(5),
-
-            "BIG_MODEL_IP":   bigModelHost,
-            "BIG_MODEL_PORT": strconv.Itoa(int(bigModelPort)),
-
-            "HEM_NAME":       edgeWorker.HardExampleMining.Name,
-            "HEM_PARAMETERS": HEMParameterString,
-
-            "LC_SERVER": c.cfg.LC.Server,
+            "NAMESPACE":       service.Namespace,
+            "SERVICE_NAME":    service.Name,
+            "WORKER_NAME":     "edgeworker-" + utilrand.String(5),
+            "BIG_MODEL_IP":    bigModelHost,
+            "BIG_MODEL_PORT":  strconv.Itoa(int(bigModelPort)),
+            // "HEM_NAME":        edgeWorker.HardExampleMining.Name,
+            // "HEM_PARAMETERS":  HEMParameterString,
+            "LC_SERVER":       c.cfg.LC.Server,
+            // "MODEL_INFO":      strings.Join(modelInfo, ";"), 
+            "MODEL_URL":      strings.Join(modelInfo, ";"), 
         }
 
         workerParam.WorkerType = jointMultiEdgeForEdge
         workerParam.HostNetwork = true
 
-        // create edge pod
-        _, err = runtime.CreatePodWithTemplate(c.kubeClient,
+        // create each edge pod
+        _, err := runtime.CreatePodWithTemplate(c.kubeClient,
             service,
             &edgeWorker.Template,
             &workerParam)
@@ -527,6 +658,7 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
 
     return nil
 }
+
 
 
 // New creates a new JointMultiEdgeService controller that keeps the relevant pods
