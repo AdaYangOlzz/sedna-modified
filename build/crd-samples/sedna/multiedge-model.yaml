@@ -6,10 +6,11 @@ metadata:
 spec:
   edgeWorker:
     - model:
-        name: "helmet-detection-inference-little-model"
+        - name: "helmet-detection-inference-little-model"
+        - name: "helmet-detection-inference-big-model"
       template:
         spec:
-          nodeName: $EDGE_NODE
+          nodeName: edge2
           dnsPolicy: ClusterFirstWithHostNet
           containers:
           - image: adayoung/sedna-joint-little-model:v1.2
@@ -42,7 +43,8 @@ spec:
                 path: /joint_inference/output
                 type: Directory
     - model:
-        name: "helmet-detection-inference-little-model"
+        - name: "helmet-detection-inference-little-model"
+        - name: "helmet-detection-inference-big-model"
       template:
         spec:
           nodeName: edge1.kubeedge
