@@ -43,14 +43,24 @@ spec:
                 description: CloudWorker describes the data a cloud worker should
                   have
                 properties:
-                  model:
-                    description: BigModel describes the big model
+                  file:
+                    description: configuration file path
                     properties:
-                      name:
+                      path:
                         type: string
                     required:
-                    - name
+                    - path
                     type: object
+                  model:
+                    description: BigModel describes the big model
+                    item:
+                      properties:
+                        name:
+                          type: string
+                      required:
+                      - name
+                      type: object
+                    type: array
                   template:
                     description: PodTemplateSpec describes the data a pod should have
                       when created from a template
@@ -7069,6 +7079,14 @@ spec:
                 items:
                   description: List of edgeworker
                   properties:
+                    file:
+                      description: configuration file path
+                      properties:
+                        path:
+                          type: string
+                      required:
+                      - path
+                      type: object            
                     hardExampleMining:
                       description: HardExampleMining describes the hard example algorithm
                         to be used

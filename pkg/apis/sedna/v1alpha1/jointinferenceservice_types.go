@@ -44,6 +44,7 @@ type JointInferenceServiceSpec struct {
 
 // EdgeWorker describes the data a edge worker should have
 type EdgeWorker struct {
+	File 			  ConfFile			`json:"file"`
 	Model             []SmallModel         `json:"model"`
 	HardExampleMining HardExampleMining  `json:"hardExampleMining"`
 	Template          v1.PodTemplateSpec `json:"template"`
@@ -51,8 +52,14 @@ type EdgeWorker struct {
 
 // CloudWorker describes the data a cloud worker should have
 type CloudWorker struct {
+	File 			  ConfFile			`json:"file"`
 	Model    []BigModel           `json:"model"`
 	Template v1.PodTemplateSpec `json:"template"`
+}
+
+// ConfFile describes the configuration file
+type ConfFile struct {
+	Path string `json:"path"`
 }
 
 // SmallModel describes the small model

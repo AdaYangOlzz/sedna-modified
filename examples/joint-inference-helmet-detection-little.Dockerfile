@@ -1,4 +1,4 @@
-FROM tensorflow/tensorflow:1.15.4
+FROM kumatea/tensorflow:1.15.5
 
 RUN apt update \
   && apt install -y libgl1-mesa-glx

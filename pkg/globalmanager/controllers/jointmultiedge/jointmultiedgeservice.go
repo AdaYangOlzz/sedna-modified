@@ -467,9 +467,14 @@ func (c *Controller) createWorkers(service *sednav1.JointMultiEdgeService) (acti
 
 
 // modified-v2: multiple models for cloud  modelName=url
+// modefied-v3: unique volumeMount
 func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService, bigModelPort int32) error {
 	ctx := context.Background()
 
+	// 定义一个 map，用于存储已经添加的挂载路径
+	mountedPaths := make(map[string]struct{})
+
+	// 存储modelName=modelPath
 	var modelEnvVars []string
 	// 使用 cloudModel 中的 Name 字段
 	// 读取yaml中的cloudworker下的model array
@@ -489,6 +494,24 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService, b
 			modelSecret, _ = c.kubeClient.CoreV1().Secrets(service.Namespace).Get(ctx, secretName, metav1.GetOptions{})
 		}
 
+		// workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
+		// 	URL: &runtime.MountURL{
+		// 		URL:                   cloudModel.Spec.URL,
+		// 		Secret:                modelSecret,
+		// 		DownloadByInitializer: true,
+		// 	},
+		// 	Name: "model",
+		// })
+
+		// Add model name and URL to the environment variable list
+		modelEnvVars = append(modelEnvVars, fmt.Sprintf("%s=%s", cloudModelName, cloudModel.Spec.URL))
+
+		if _, exists := mountedPaths[cloudModel.Spec.URL]; exists {
+			fmt.Printf("duplicate mount path: %s\n", cloudModel.Spec.URL)
+			continue
+		}
+		mountedPaths[cloudModel.Spec.URL] = struct{}{}
+
 		workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
 			URL: &runtime.MountURL{
 				URL:                   cloudModel.Spec.URL,
@@ -498,13 +521,31 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService, b
 			Name: "model",
 		})
 
-		// Add model name and URL to the environment variable list
-		modelEnvVars = append(modelEnvVars, fmt.Sprintf("%s=%s", cloudModelName, cloudModel.Spec.URL))
 	}
 
+	
 	// Set the model URLs and names in the environment variable outside the loop
 	var workerParam runtime.WorkerParam
+	
+	// file := service.Spec.CloudWorker.File
+	// fileUrl := file.Path
 
+	fileUrl := service.Spec.CloudWorker.File.Path
+	if _, exists := mountedPaths[fileUrl]; exists {
+		fmt.Printf("duplicate mount path: %s\n", fileUrl)
+	}else{
+		mountedPaths[fileUrl] = struct{}{}
+	
+		workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
+			URL: &runtime.MountURL{
+				URL:                   fileUrl,
+				DownloadByInitializer: true,
+			},
+			Name: "file",
+			EnvName: "FILE_URL",
+		})
+	}
+	
 	workerParam.Env = map[string]string{
 		"NAMESPACE":          service.Namespace,
 		"SERVICE_NAME":       service.Name,
@@ -593,6 +634,9 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService, b
 func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bigModelHost string, bigModelPort int32) error {
     ctx := context.Background()
 
+	// 定义一个 map，用于存储已经添加的挂载路径
+	mountedPaths := make(map[string]struct{})
+
     for _, edgeWorker := range service.Spec.EdgeWorker {
         // Array to store model information (name and URL)
         var modelInfo []string
@@ -619,16 +663,48 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
             // Append each model information (name and URL) to modelInfo array
             modelInfo = append(modelInfo, fmt.Sprintf("%s=%s", edgeModelName, edgeModel.Spec.URL))
 
+			if _, exists := mountedPaths[edgeModel.Spec.URL]; exists {
+				fmt.Printf("duplicate mount path: %s\n", edgeModel.Spec.URL)
+				continue
+			}
+			mountedPaths[edgeModel.Spec.URL] = struct{}{}
+	
+			workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
+				URL: &runtime.MountURL{
+					URL:                   edgeModel.Spec.URL,
+					Secret:                modelSecret,
+					DownloadByInitializer: true,
+				},
+				Name: "model",
+			})
+
             // Deal with a specific model in each iteration
-            workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
-                URL: &runtime.MountURL{
-                    URL:                   edgeModel.Spec.URL,
-                    Secret:                modelSecret,
-                    DownloadByInitializer: true,
-                },
-                Name: "model",
-            })
+            // workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
+            //     URL: &runtime.MountURL{
+            //         URL:                   edgeModel.Spec.URL,
+            //         Secret:                modelSecret,
+            //         DownloadByInitializer: true,
+            //     },
+            //     Name: "model",
+            // })
         }
+		
+		// 挂载file路径
+		fileUrl := edgeWorker.File.Path
+		if _, exists := mountedPaths[fileUrl]; exists {
+			fmt.Printf("duplicate mount path: %s\n", fileUrl)
+		}else{
+			mountedPaths[fileUrl] = struct{}{}
+		
+			workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
+				URL: &runtime.MountURL{
+					URL:                   fileUrl,
+					DownloadByInitializer: true,
+				},
+				Name: "file",
+				EnvName: "FILE_URL",
+			})
+		}
 
         workerParam.Env = map[string]string{
             "NAMESPACE":       service.Namespace,
