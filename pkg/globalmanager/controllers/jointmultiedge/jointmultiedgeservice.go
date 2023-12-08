@@ -22,6 +22,7 @@ import (
 	"strconv"
 	"time"
 	"strings"
+	"path/filepath"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -506,11 +507,13 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService, b
 		// Add model name and URL to the environment variable list
 		modelEnvVars = append(modelEnvVars, fmt.Sprintf("%s=%s", cloudModelName, cloudModel.Spec.URL))
 
-		if _, exists := mountedPaths[cloudModel.Spec.URL]; exists {
-			fmt.Printf("duplicate mount path: %s\n", cloudModel.Spec.URL)
+		// cloudModel.Spec.URL 形如 "/home/nvidia/yby/demo/yolov3_darknet.pb",直接取url是不行的
+		dirUrl := filepath.Dir(cloudModel.Spec.URL)
+		if _, exists := mountedPaths[dirUrl]; exists {
+			fmt.Printf("duplicate mount path: %s\n", dirUrl)
 			continue
 		}
-		mountedPaths[cloudModel.Spec.URL] = struct{}{}
+		mountedPaths[dirUrl] = struct{}{}
 
 		workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
 			URL: &runtime.MountURL{
@@ -531,10 +534,11 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService, b
 	// fileUrl := file.Path
 
 	fileUrl := service.Spec.CloudWorker.File.Path
-	if _, exists := mountedPaths[fileUrl]; exists {
-		fmt.Printf("duplicate mount path: %s\n", fileUrl)
+	dirUrl := filepath.Dir(fileUrl)
+	if _, exists := mountedPaths[dirUrl]; exists {
+		fmt.Printf("duplicate mount path: %s\n", dirUrl)
 	}else{
-		mountedPaths[fileUrl] = struct{}{}
+		mountedPaths[dirUrl] = struct{}{}
 	
 		workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
 			URL: &runtime.MountURL{
@@ -662,12 +666,13 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
 
             // Append each model information (name and URL) to modelInfo array
             modelInfo = append(modelInfo, fmt.Sprintf("%s=%s", edgeModelName, edgeModel.Spec.URL))
-
-			if _, exists := mountedPaths[edgeModel.Spec.URL]; exists {
+			
+			dirUrl := filepath.Dir(edgeModel.Spec.URL)
+			if _, exists := mountedPaths[dirUrl]; exists {
 				fmt.Printf("duplicate mount path: %s\n", edgeModel.Spec.URL)
 				continue
 			}
-			mountedPaths[edgeModel.Spec.URL] = struct{}{}
+			mountedPaths[dirUrl] = struct{}{}
 	
 			workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
 				URL: &runtime.MountURL{
@@ -691,10 +696,11 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
 		
 		// 挂载file路径
 		fileUrl := edgeWorker.File.Path
-		if _, exists := mountedPaths[fileUrl]; exists {
+		dirUrl := filepath.Dir(fileUrl)
+		if _, exists := mountedPaths[dirUrl]; exists {
 			fmt.Printf("duplicate mount path: %s\n", fileUrl)
 		}else{
-			mountedPaths[fileUrl] = struct{}{}
+			mountedPaths[dirUrl] = struct{}{}
 		
 			workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
 				URL: &runtime.MountURL{

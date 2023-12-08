@@ -53,7 +53,7 @@ spec:
                     type: object
                   model:
                     description: BigModel describes the big model
-                    item:
+                    items:
                       properties:
                         name:
                           type: string
