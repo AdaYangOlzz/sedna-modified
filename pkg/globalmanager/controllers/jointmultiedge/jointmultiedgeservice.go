@@ -557,8 +557,8 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService, b
 		"BIG_MODEL_BIND_PORT": strconv.Itoa(int(bigModelPort)),
 		// model_info以;做分隔符
 		// "MODEL_INFO":         strings.Join(modelEnvVars, ";"),
-		"MODEL_URL":         strings.Join(modelEnvVars, ";"),
 		"FILE_URL":			fileUrl,
+		"MODEL_URL":         strings.Join(modelEnvVars, ";"),
 	}
 
 	workerParam.WorkerType = jointMultiEdgeForCloud
@@ -684,15 +684,6 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
 				Name: "model",
 			})
 
-            // Deal with a specific model in each iteration
-            // workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
-            //     URL: &runtime.MountURL{
-            //         URL:                   edgeModel.Spec.URL,
-            //         Secret:                modelSecret,
-            //         DownloadByInitializer: true,
-            //     },
-            //     Name: "model",
-            // })
         }
 		
 		// 挂载file路径
@@ -723,8 +714,8 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
             // "HEM_PARAMETERS":  HEMParameterString,
             "LC_SERVER":       c.cfg.LC.Server,
             // "MODEL_INFO":      strings.Join(modelInfo, ";"), 
-            "MODEL_URL":      strings.Join(modelInfo, ";"), 
 			"FILE_URL":		fileUrl,
+            "MODEL_URL":      strings.Join(modelInfo, ";"), 
         }
 
         workerParam.WorkerType = jointMultiEdgeForEdge
