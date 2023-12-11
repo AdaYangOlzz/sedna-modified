@@ -558,6 +558,7 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService, b
 		// model_info以;做分隔符
 		// "MODEL_INFO":         strings.Join(modelEnvVars, ";"),
 		"MODEL_URL":         strings.Join(modelEnvVars, ";"),
+		"FILE_URL":			fileUrl,
 	}
 
 	workerParam.WorkerType = jointMultiEdgeForCloud
@@ -723,6 +724,7 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
             "LC_SERVER":       c.cfg.LC.Server,
             // "MODEL_INFO":      strings.Join(modelInfo, ";"), 
             "MODEL_URL":      strings.Join(modelInfo, ";"), 
+			"FILE_URL":		fileUrl,
         }
 
         workerParam.WorkerType = jointMultiEdgeForEdge
