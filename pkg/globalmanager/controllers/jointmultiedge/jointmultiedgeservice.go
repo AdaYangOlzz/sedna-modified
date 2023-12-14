@@ -714,9 +714,12 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
 				// 设置 Deployment 的规范
 				Replicas: int32Ptr(1), // 设置副本数
 				Selector: &metav1.LabelSelector{
-					MatchLabels: map[string]string{
-						// 设置 Deployment 的标签选择器，通常与 Pod 模板中的标签匹配
-						"app": "edgeworker",
+					MatchExpressions: []metav1.LabelSelectorRequirement{
+						{
+							Key:      "kubernetes.io/hostname",
+							Operator: metav1.LabelSelectorOpIn,
+							Values:   []string{edgeWorker.Template.Spec.NodeName},
+						},
 					},
 				},
 				Template: edgeWorker.Template,
