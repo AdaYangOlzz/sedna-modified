@@ -45,6 +45,7 @@ type JointInferenceServiceSpec struct {
 // EdgeWorker describes the data a edge worker should have
 type EdgeWorker struct {
 	File 			  ConfFile			`json:"file"`
+	LogLevel			  LogLevel			`json:"logLevel"`
 	Model             []SmallModel         `json:"model"`
 	HardExampleMining HardExampleMining  `json:"hardExampleMining"`
 	Template          v1.PodTemplateSpec `json:"template"`
@@ -53,8 +54,13 @@ type EdgeWorker struct {
 // CloudWorker describes the data a cloud worker should have
 type CloudWorker struct {
 	File 			  ConfFile			`json:"file"`
+	LogLevel		  LogLevel			`json:"logLevel"`
 	Model    []BigModel           `json:"model"`
 	Template v1.PodTemplateSpec `json:"template"`
+}
+
+type LogLevel struct{
+	Level string `json:"level"`
 }
 
 // ConfFile describes the configuration file

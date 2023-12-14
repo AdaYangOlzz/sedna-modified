@@ -51,6 +51,14 @@ spec:
                     required:
                     - path
                     type: object
+                  logLevel:
+                    description: adjust log level
+                    properties:
+                      level:
+                        type: string
+                    required:
+                    - level
+                    type: object
                   model:
                     description: BigModel describes the big model
                     items:
@@ -7086,7 +7094,15 @@ spec:
                           type: string
                       required:
                       - path
-                      type: object            
+                      type: object     
+                    logLevel:
+                      description: adjust log level
+                      properties:
+                        level:
+                          type: string
+                      required:
+                      - level
+                      type: object       
                     hardExampleMining:
                       description: HardExampleMining describes the hard example algorithm
                         to be used
