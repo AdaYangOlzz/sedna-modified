@@ -712,24 +712,41 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
         workerParam.WorkerType = jointMultiEdgeForEdge
         workerParam.HostNetwork = true
 
+		// 遍历 edgeWorker.Template 中的容器列表
+		for i := range edgeWorker.Template.Spec.Containers {
+			// 获取容器
+			container := &edgeWorker.Template.Spec.Containers[i]
+
+			// 将 workerParam.Env 中的环境变量应用到容器
+			for key, value := range workerParam.Env {
+				container.Env = append(container.Env, v1.EnvVar{
+					Name:  key,
+					Value: value,
+				})
+			}
+		}
+		
         // create each edge deployment
+		if edgeWorker.Template.ObjectMeta.Labels == nil {
+			edgeWorker.Template.ObjectMeta.Labels = make(map[string]string)
+		}
+		
+		// 添加或更新 labels，以 nodeName 为标签键
+		edgeWorker.Template.ObjectMeta.Labels["kubernetes.io/hostname"] = edgeWorker.Template.Spec.NodeName
+
 		deployment := &appsv1.Deployment{
 			// 设置 Deployment 的元数据和规范
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "edgeworker-deployment-" + utilrand.String(5),
 				Namespace: service.Namespace,
-				// 其他元数据字段...
 			},
 			Spec: appsv1.DeploymentSpec{
 				// 设置 Deployment 的规范
 				Replicas: int32Ptr(1), // 设置副本数
 				Selector: &metav1.LabelSelector{
-					MatchExpressions: []metav1.LabelSelectorRequirement{
-						{
-							Key:      "kubernetes.io/hostname",
-							Operator: metav1.LabelSelectorOpIn,
-							Values:   []string{edgeWorker.Template.Spec.NodeName},
-						},
+					MatchLabels: map[string]string{
+						// 使用 nodeName 作为选择条件
+						"kubernetes.io/hostname": edgeWorker.Template.Spec.NodeName,
 					},
 				},
 				Template: edgeWorker.Template,
