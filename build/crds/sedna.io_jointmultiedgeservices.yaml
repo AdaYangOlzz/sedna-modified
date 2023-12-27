@@ -57,16 +57,6 @@ spec:
                     required:
                     - level
                     type: object
-                  model:
-                    description: BigModel describes the big model
-                    items:
-                      properties:
-                        name:
-                          type: string
-                      required:
-                      - name
-                      type: object
-                    type: array
                   template:
                     description: PodTemplateSpec describes the data a pod should have
                       when created from a template
@@ -7100,38 +7090,6 @@ spec:
                       required:
                       - level
                       type: object       
-                    hardExampleMining:
-                      description: HardExampleMining describes the hard example algorithm
-                        to be used
-                      properties:
-                        name:
-                          type: string
-                        parameters:
-                          items:
-                            description: ParaSpec is a description of a parameter
-                            properties:
-                              key:
-                                type: string
-                              value:
-                                type: string
-                            required:
-                            - key
-                            - value
-                            type: object
-                          type: array
-                      required:
-                      - name
-                      type: object
-                    model:
-                      description: SmallModel describes the small model
-                      items:
-                        properties:
-                          name:
-                            type: string
-                        required:
-                        - name
-                        type: object
-                      type: array
                     template:
                       description: PodTemplateSpec describes the data a pod should have
                         when created from a template
