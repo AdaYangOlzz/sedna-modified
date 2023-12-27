@@ -21,8 +21,8 @@ import (
 	"fmt"
 	"strconv"
 	"time"
-	"strings"
 	"path/filepath"
+	"reflect"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	appsv1 "k8s.io/api/apps/v1"
@@ -425,66 +425,17 @@ func (c *Controller) createWorkers(service *sednav1.JointMultiEdgeService) (acti
 
 
 
-// modified-v2: multiple models for cloud  modelName=url
-// modefied-v3: unique volumeMount
+// multiple models for cloud  modelName=url
+// unique volumeMount
 func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService, bigModelPort int32) error {
-	ctx := context.Background()
+	// ctx := context.Background()
 
+	if reflect.DeepEqual(service.Spec.CloudWorker, sednav1.CloudWorker{}) {
+		return nil
+	}
 	// 定义一个 map，用于存储已经添加的挂载路径
 	mountedPaths := make(map[string]struct{})
 
-	// 存储modelName=modelPath
-	var modelEnvVars []string
-	// 使用 cloudModel 中的 Name 字段
-	// 读取yaml中的cloudworker下的model array
-	// 去已经部署的model中找对应的
-	for _, cloudModel := range service.Spec.CloudWorker.Model {
-		cloudModelName := cloudModel.Name
-		cloudModel, err := c.client.Models(service.Namespace).Get(ctx, cloudModelName, metav1.GetOptions{})
-		if err != nil {
-			return fmt.Errorf("failed to get cloud model %s: %w", cloudModelName, err)
-		}
-
-		var workerParam runtime.WorkerParam
-
-		secretName := cloudModel.Spec.CredentialName
-		var modelSecret *v1.Secret
-		if secretName != "" {
-			modelSecret, _ = c.kubeClient.CoreV1().Secrets(service.Namespace).Get(ctx, secretName, metav1.GetOptions{})
-		}
-
-		// workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
-		// 	URL: &runtime.MountURL{
-		// 		URL:                   cloudModel.Spec.URL,
-		// 		Secret:                modelSecret,
-		// 		DownloadByInitializer: true,
-		// 	},
-		// 	Name: "model",
-		// })
-
-		// Add model name and URL to the environment variable list
-		modelEnvVars = append(modelEnvVars, fmt.Sprintf("%s=%s", cloudModelName, cloudModel.Spec.URL))
-
-		// cloudModel.Spec.URL 形如 "/home/nvidia/yby/demo/yolov3_darknet.pb",直接取url是不行的
-		dirUrl := filepath.Dir(cloudModel.Spec.URL)
-		if _, exists := mountedPaths[dirUrl]; exists {
-			fmt.Printf("duplicate mount path: %s\n", dirUrl)
-			continue
-		}
-		mountedPaths[dirUrl] = struct{}{}
-
-		workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
-			URL: &runtime.MountURL{
-				URL:                   cloudModel.Spec.URL,
-				Secret:                modelSecret,
-				DownloadByInitializer: true,
-			},
-			Name: "model",
-		})
-
-	}
-
-	
 	// Set the model URLs and names in the environment variable outside the loop
 	var workerParam runtime.WorkerParam
 	
@@ -516,7 +467,6 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService, b
 		"BIG_MODEL_BIND_PORT": strconv.Itoa(int(bigModelPort)),
 		"FILE_URL":			fileUrl,
 		"LOG_LEVEL":		logLevel,
-		"MODEL_URL":         strings.Join(modelEnvVars, ";"),
 	}
 
 	workerParam.WorkerType = jointMultiEdgeForCloud
@@ -530,151 +480,18 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService, b
 }
 
 
-// // modified: model设置为array, 也需要遍历创建读取
-// func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bigModelHost string, bigModelPort int32) error {
-//     ctx := context.Background()
-
-// 	// 定义一个 map，用于存储已经添加的挂载路径
-// 	mountedPaths := make(map[string]struct{})
-
-//     for _, edgeWorker := range service.Spec.EdgeWorker {
-//         // Array to store model information (name and URL)
-//         var modelInfo []string
-
-//         var workerParam runtime.WorkerParam
-
-// 		// 挂载模型
-//         for _, edgeModel := range edgeWorker.Model {
-// 			// 使用 edgeModel 中的 Name 字段
-// 			edgeModelName := edgeModel.Name
-//             edgeModel, err := c.client.Models(service.Namespace).Get(ctx, edgeModelName, metav1.GetOptions{})
-//             if err != nil {
-//                 return fmt.Errorf("failed to get edge model %s: %w", edgeModelName, err)
-//             }
-
-//             secretName := edgeModel.Spec.CredentialName
-//             var modelSecret *v1.Secret
-//             if secretName != "" {
-//                 modelSecret, _ = c.kubeClient.CoreV1().Secrets(service.Namespace).Get(context.TODO(), secretName, metav1.GetOptions{})
-//             }
-
-//             // Append each model information (name and URL) to modelInfo array
-//             modelInfo = append(modelInfo, fmt.Sprintf("%s=%s", edgeModelName, edgeModel.Spec.URL))
-			
-// 			dirUrl := filepath.Dir(edgeModel.Spec.URL)
-// 			if _, exists := mountedPaths[dirUrl]; exists {
-// 				fmt.Printf("duplicate mount path: %s\n", edgeModel.Spec.URL)
-// 				continue
-// 			}
-// 			mountedPaths[dirUrl] = struct{}{}
-	
-// 			workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
-// 				URL: &runtime.MountURL{
-// 					URL:                   edgeModel.Spec.URL,
-// 					Secret:                modelSecret,
-// 					DownloadByInitializer: true,
-// 				},
-// 				Name: "model",
-// 			})
-
-//         }
-		
-// 		// LOG_LEVEL
-// 		logLevel := edgeWorker.LogLevel.Level
-
-// 		// 挂载file路径
-// 		fileUrl := edgeWorker.File.Path
-// 		dirUrl := filepath.Dir(fileUrl)
-// 		if _, exists := mountedPaths[dirUrl]; exists { 
-// 			fmt.Printf("duplicate mount path: %s\n", fileUrl)
-// 		}else{
-// 			mountedPaths[dirUrl] = struct{}{}
-		
-// 			workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
-// 				URL: &runtime.MountURL{
-// 					URL:                   fileUrl,
-// 					DownloadByInitializer: true,
-// 				},
-// 				Name: "file",
-// 				EnvName: "FILE_URL",
-// 			})
-// 		}
-
-//         workerParam.Env = map[string]string{
-//             "NAMESPACE":       service.Namespace,
-//             "SERVICE_NAME":    service.Name,
-//             "WORKER_NAME":     "edgeworker-" + utilrand.String(5),
-//             "BIG_MODEL_IP":    bigModelHost,
-//             "BIG_MODEL_PORT":  strconv.Itoa(int(bigModelPort)),
-//             "LC_SERVER":       c.cfg.LC.Server,
-// 			"FILE_URL":		   fileUrl,
-// 			"LOG_LEVEL":       logLevel,
-//             "MODEL_URL":       strings.Join(modelInfo, ";"), 
-//         }
-
-//         workerParam.WorkerType = jointMultiEdgeForEdge
-//         workerParam.HostNetwork = true
-
-//         // create each edge pod
-//         _, err := runtime.CreatePodWithTemplate(c.kubeClient,
-//             service,
-//             &edgeWorker.Template,
-//             &workerParam)
-//         if err != nil {
-//             return err
-//         }
-//     }
-
-//     return nil
-// }
-
 func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bigModelHost string, bigModelPort int32) error {
-    ctx := context.Background()
-
+    // ctx := context.Background()
+	// 没有edge直接返回
+	if reflect.DeepEqual(service.Spec.EdgeWorker, sednav1.EdgeWorker{}) {
+		return nil
+	}
 	// 定义一个 map，用于存储已经添加的挂载路径
 	mountedPaths := make(map[string]struct{})
 
     for _, edgeWorker := range service.Spec.EdgeWorker {
-        // Array to store model information (name and URL)
-        var modelInfo []string
 
         var workerParam runtime.WorkerParam
-
-		// 挂载模型
-        for _, edgeModel := range edgeWorker.Model {
-			// 使用 edgeModel 中的 Name 字段
-			edgeModelName := edgeModel.Name
-            edgeModel, err := c.client.Models(service.Namespace).Get(ctx, edgeModelName, metav1.GetOptions{})
-            if err != nil {
-                return fmt.Errorf("failed to get edge model %s: %w", edgeModelName, err)
-            }
-
-            secretName := edgeModel.Spec.CredentialName
-            var modelSecret *v1.Secret
-            if secretName != "" {
-                modelSecret, _ = c.kubeClient.CoreV1().Secrets(service.Namespace).Get(context.TODO(), secretName, metav1.GetOptions{})
-            }
-
-            // Append each model information (name and URL) to modelInfo array
-            modelInfo = append(modelInfo, fmt.Sprintf("%s=%s", edgeModelName, edgeModel.Spec.URL))
-			
-			dirUrl := filepath.Dir(edgeModel.Spec.URL)
-			if _, exists := mountedPaths[dirUrl]; exists {
-				fmt.Printf("duplicate mount path: %s\n", edgeModel.Spec.URL)
-				continue
-			}
-			mountedPaths[dirUrl] = struct{}{}
-	
-			workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
-				URL: &runtime.MountURL{
-					URL:                   edgeModel.Spec.URL,
-					Secret:                modelSecret,
-					DownloadByInitializer: true,
-				},
-				Name: "model",
-			})
-
-        }
 
 		// LOG_LEVEL
 		logLevel := edgeWorker.LogLevel.Level
@@ -700,13 +517,12 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
         workerParam.Env = map[string]string{
             "NAMESPACE":       service.Namespace,
             "SERVICE_NAME":    service.Name,
-            "WORKER_NAME":     "edgeworker-" + utilrand.String(5),
-            "BIG_MODEL_IP":    bigModelHost,
-            "BIG_MODEL_PORT":  strconv.Itoa(int(bigModelPort)),
+            // "WORKER_NAME":     "edgeworker-" + utilrand.String(5),
+            // "BIG_MODEL_IP":    bigModelHost,
+            // "BIG_MODEL_PORT":  strconv.Itoa(int(bigModelPort)),
             "LC_SERVER":       c.cfg.LC.Server,
 			"FILE_URL":		   fileUrl,
 			"LOG_LEVEL":       logLevel,
-            "MODEL_URL":       strings.Join(modelInfo, ";"), 
         }
 
         workerParam.WorkerType = jointMultiEdgeForEdge

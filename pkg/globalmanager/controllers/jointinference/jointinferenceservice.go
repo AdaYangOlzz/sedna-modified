@@ -18,15 +18,12 @@ package jointinference
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"strconv"
 	"time"
 
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	utilrand "k8s.io/apimachinery/pkg/util/rand"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/apimachinery/pkg/watch"
@@ -468,50 +465,7 @@ func (c *Controller) createWorkers(service *sednav1.JointInferenceService) (acti
 
 func (c *Controller) createCloudWorker(service *sednav1.JointInferenceService, bigModelPort int32) error {
     // deliver pod for cloudworker
-    for _, cloudModel := range service.Spec.CloudWorker.Model {
-        cloudModelName := cloudModel.Name
-        cloudModel, err := c.client.Models(service.Namespace).Get(context.Background(), cloudModelName, metav1.GetOptions{})
-        if err != nil {
-            return fmt.Errorf("failed to get cloud model %s: %w", cloudModelName, err)
-        }
-
-        var workerParam runtime.WorkerParam
-
-        secretName := cloudModel.Spec.CredentialName
-        var modelSecret *v1.Secret
-        if secretName != "" {
-            modelSecret, _ = c.kubeClient.CoreV1().Secrets(service.Namespace).Get(context.TODO(), secretName, metav1.GetOptions{})
-        }
-        workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
-            URL: &runtime.MountURL{
-                URL:                   cloudModel.Spec.URL,
-                Secret:                modelSecret,
-                DownloadByInitializer: true,
-            },
-            Name: "model",
-        })
-
-        // Add model name and URL to the environment variable list
-        workerParam.Env = map[string]string{
-            "MODEL_URL": cloudModel.Spec.URL, // Assuming you want to set MODEL_URL environment variable
-            // Add other environment variables as needed
-            "NAMESPACE":          service.Namespace,
-            "SERVICE_NAME":       service.Name,
-            "WORKER_NAME":        "cloudworker-" + utilrand.String(5),
-            "BIG_MODEL_BIND_PORT": strconv.Itoa(int(bigModelPort)),
-        }
-
-        workerParam.WorkerType = jointInferenceForCloud
-
-        // create cloud pod
-        _, err = runtime.CreatePodWithTemplate(c.kubeClient,
-            service,
-            &service.Spec.CloudWorker.Template,
-            &workerParam)
-        if err != nil {
-            return err
-        }
-    }
+    
 
     return nil
 }
@@ -575,62 +529,7 @@ func (c *Controller) createCloudWorker(service *sednav1.JointInferenceService, b
 
 func (c *Controller) createEdgeWorker(service *sednav1.JointInferenceService, bigModelHost string, bigModelPort int32) error {
     // deliver pod for edgeworker
-    ctx := context.Background()
 
-    for _, edgeModel := range service.Spec.EdgeWorker.Model {
-        edgeModelName := edgeModel.Name
-        edgeModel, err := c.client.Models(service.Namespace).Get(ctx, edgeModelName, metav1.GetOptions{})
-        if err != nil {
-            return fmt.Errorf("failed to get edge model %s: %w", edgeModelName, err)
-        }
-
-        secretName := edgeModel.Spec.CredentialName
-        var modelSecret *v1.Secret
-        if secretName != "" {
-            modelSecret, _ = c.kubeClient.CoreV1().Secrets(service.Namespace).Get(context.TODO(), secretName, metav1.GetOptions{})
-        }
-
-        edgeWorker := service.Spec.EdgeWorker
-        HEMParameterJSON, _ := json.Marshal(edgeWorker.HardExampleMining.Parameters)
-        HEMParameterString := string(HEMParameterJSON)
-
-        var workerParam runtime.WorkerParam
-
-        workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
-            URL: &runtime.MountURL{
-                URL:                   edgeModel.Spec.URL,
-                Secret:                modelSecret,
-                DownloadByInitializer: true,
-            },
-            Name: "model",
-        })
-
-        // Add model name and URL to the environment variable list
-        workerParam.Env = map[string]string{
-            "MODEL_URL": edgeModel.Spec.URL, // Assuming you want to set MODEL_URL environment variable
-            // Add other environment variables as needed
-            "NAMESPACE":       service.Namespace,
-            "SERVICE_NAME":    service.Name,
-            "WORKER_NAME":     "edgeworker-" + utilrand.String(5),
-            "BIG_MODEL_IP":    bigModelHost,
-            "BIG_MODEL_PORT":  strconv.Itoa(int(bigModelPort)),
-            "HEM_NAME":        edgeWorker.HardExampleMining.Name,
-            "HEM_PARAMETERS":  HEMParameterString,
-            "LC_SERVER":       c.cfg.LC.Server,
-        }
-
-        workerParam.WorkerType = jointInferenceForEdge
-        workerParam.HostNetwork = true
-
-        // create edge pod
-        _, err = runtime.CreatePodWithTemplate(c.kubeClient,
-            service,
-            &service.Spec.EdgeWorker.Template,
-            &workerParam)
-        if err != nil {
-            return err
-        }
-    }
 
     return nil
 }

@@ -46,7 +46,6 @@ type JointInferenceServiceSpec struct {
 type EdgeWorker struct {
 	File 			  ConfFile			`json:"file"`
 	LogLevel			  LogLevel			`json:"logLevel"`
-	Model             []SmallModel         `json:"model"`
 	HardExampleMining HardExampleMining  `json:"hardExampleMining"`
 	Template          v1.PodTemplateSpec `json:"template"`
 }
@@ -55,7 +54,6 @@ type EdgeWorker struct {
 type CloudWorker struct {
 	File 			  ConfFile			`json:"file"`
 	LogLevel		  LogLevel			`json:"logLevel"`
-	Model    []BigModel           `json:"model"`
 	Template v1.PodTemplateSpec `json:"template"`
 }
 
@@ -68,15 +66,6 @@ type ConfFile struct {
 	Path string `json:"path"`
 }
 
-// SmallModel describes the small model
-type SmallModel struct {
-	Name string `json:"name"`
-}
-
-// BigModel describes the big model
-type BigModel struct {
-	Name string `json:"name"`
-}
 
 // HardExampleMining describes the hard example algorithm to be used
 type HardExampleMining struct {
