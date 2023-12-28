@@ -564,6 +564,7 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
 					MatchLabels: map[string]string{
 						// 使用 nodeName 作为选择条件
 						"kubernetes.io/hostname": edgeWorker.Template.Spec.NodeName,
+						"jointmultiedge.sedna.io/name":    service.Name,
 					},
 				},
 				Template: edgeWorker.Template,
