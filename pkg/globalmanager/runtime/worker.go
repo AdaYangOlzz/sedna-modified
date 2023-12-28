@@ -264,6 +264,7 @@ func CreateEdgeMeshServiceCustome(kubeClient kubernetes.Interface, object Common
 		},
 		Spec: v1.ServiceSpec{
 			Selector: generateLabels(object, workerType),
+			Type:     v1.ServiceTypeNodePort,
 			Ports: []v1.ServicePort{
 				{
 					// TODO: be clean, Port.Name is currently required by edgemesh(v1.8.0).
