@@ -15,6 +15,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
 	k8scontroller "k8s.io/kubernetes/pkg/controller"
+	sednav1 "github.com/adayangolzz/sedna-modified/pkg/apis/sedna/v1alpha1"
 )
 
 type WorkerMount struct {
@@ -217,6 +218,62 @@ func CreateEdgeMeshService(kubeClient kubernetes.Interface, object CommonInterfa
 					Protocol:   "TCP",
 					Port:       servicePort,
 					TargetPort: targetPort,
+				},
+			},
+		},
+	}
+	service, err := kubeClient.CoreV1().Services(namespace).Create(ctx, serviceSpec, metav1.CreateOptions{})
+	if err != nil {
+		klog.Warningf("failed to create service for %v %v/%v, err:%s", kind, namespace, name, err)
+		return "", err
+	}
+
+	klog.V(2).Infof("Service %s is created successfully for %v %v/%v", service.Name, kind, namespace, name)
+	return fmt.Sprintf("%s.%s", service.Name, service.Namespace), nil
+}
+
+func CreateEdgeMeshServiceCustome(kubeClient kubernetes.Interface, object CommonInterface) (string, error) {
+	ctx := context.Background()
+	name := object.GetName()
+	namespace := object.GetNamespace()
+	kind := object.GroupVersionKind().Kind
+
+	// 类型转换
+	jointMultiEdgeService, ok := object.(*sednav1.JointMultiEdgeService)
+	if !ok {
+		return "", fmt.Errorf("unexpected type: %T", object)
+	}
+
+	serviceConfig := jointMultiEdgeService.Spec.ServiceConfig
+
+	targetPort := intstr.IntOrString{
+		IntVal: serviceConfig.Port,
+	}
+	servicePort := serviceConfig.Port
+	nodePort := serviceConfig.NodePort
+
+	workerType := serviceConfig.Pos
+	serviceSpec := &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: namespace,
+			Name:      strings.ToLower(name + "-" + workerType),
+			OwnerReferences: []metav1.OwnerReference{
+				*metav1.NewControllerRef(object, object.GroupVersionKind()),
+			},
+			Labels: generateLabels(object, workerType),
+		},
+		Spec: v1.ServiceSpec{
+			Selector: generateLabels(object, workerType),
+			Ports: []v1.ServicePort{
+				{
+					// TODO: be clean, Port.Name is currently required by edgemesh(v1.8.0).
+					// and should be <protocol>-<suffix>
+					Name: "tcp-0",
+
+					Protocol:   "TCP",
+					Port:       servicePort,
+					TargetPort: targetPort,
+					NodePort: nodePort,
 				},
 			},
 		},

@@ -14103,6 +14103,25 @@ spec:
                   - template
                   type: object
                 type: array
+              serviceConfig:
+                description: define service config be like port,targetPort and nodePort
+                properties:
+                  pos:
+                    description: service pos - cloud / edge /both
+                    type: string
+                  port:
+                    description: Exposed internally within the cluster
+                    format: int32
+                    type: integer
+                  targetPort:
+                    description: Forwards traffic to pods 
+                    format: int32
+                    type: integer
+                  nodePort:
+                    description: Exposes the service externally on node port
+                    format: int32
+                    type: integer
+                type: object
             type: object
           status:
             description: JointInferenceServiceStatus represents the current state
