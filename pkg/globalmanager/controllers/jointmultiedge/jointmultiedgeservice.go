@@ -550,6 +550,7 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
 		
 		// 添加或更新 labels，以 nodeName 为标签键
 		edgeWorker.Template.ObjectMeta.Labels["kubernetes.io/hostname"] = edgeWorker.Template.Spec.NodeName
+		edgeWorker.Template.ObjectMeta.Labels["jointmultiedge.sedna.io/name"] = service.Name
 
 		deployment := &appsv1.Deployment{
 			// 设置 Deployment 的元数据和规范
@@ -570,6 +571,8 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
 				Template: edgeWorker.Template,
 			},
 		}
+		
+		
 
 		// 将 Deployment 创建到集群中
 		_, err := c.kubeClient.AppsV1().Deployments(service.Namespace).Create(context.TODO(), deployment, metav1.CreateOptions{})
