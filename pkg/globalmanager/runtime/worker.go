@@ -252,7 +252,6 @@ func CreateEdgeMeshServiceCustome(kubeClient kubernetes.Interface, object Common
 	servicePort := serviceConfig.Port
 	nodePort := serviceConfig.NodePort
 
-	loadBalancerIP := ""
 	workerType := serviceConfig.Pos
 	serviceSpec := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
@@ -261,13 +260,11 @@ func CreateEdgeMeshServiceCustome(kubeClient kubernetes.Interface, object Common
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(object, object.GroupVersionKind()),
 			},
-			
 			Labels: generateLabels(object, workerType),
 		},
 		Spec: v1.ServiceSpec{
 			Selector: generateLabels(object, workerType),
-			Type:     v1.ServiceTypeLoadBalancer,  // 修改Service类型为LoadBalancer
-            LoadBalancerIP: loadBalancerIP,        // 指定IPv4地址
+			Type:     v1.ServiceTypeNodePort,
 			Ports: []v1.ServicePort{
 				{
 					// TODO: be clean, Port.Name is currently required by edgemesh(v1.8.0).

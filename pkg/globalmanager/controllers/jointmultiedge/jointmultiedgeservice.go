@@ -408,8 +408,8 @@ func (c *Controller) createWorkers(service *sednav1.JointMultiEdgeService) (acti
 	active++
 
 	// create k8s service for cloudPod
-	// bigModelHost, err := runtime.CreateEdgeMeshService(c.kubeClient, service, jointMultiEdgeForCloud, bigModelPort)
-	bigModelHost, err := runtime.CreateEdgeMeshServiceCustome(c.kubeClient, service)
+	bigModelHost, err := runtime.CreateEdgeMeshService(c.kubeClient, service, jointMultiEdgeForCloud, bigModelPort)
+	// bigModelHost, err := runtime.CreateEdgeMeshServiceCustome(c.kubeClient, service)
 	if err != nil {
 		return active, err
 	}
