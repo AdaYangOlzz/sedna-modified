@@ -472,10 +472,12 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService, b
 		"FILE_URL":			fileUrl,
 		"LOG_LEVEL":		logLevel,
 		"NODE_NAME":		service.Spec.CloudWorker.Template.Spec.NodeName,
+		"DATA_PATH_PREFIX": "/home/data",
 		"KUBECONFIG":		"/home/data/.kube/config", // py中读取的kube_config文件位置
 	}
 
 	workerParam.WorkerType = jointMultiEdgeForCloud
+	workerParam.HostNetwork = true
 
 	// 遍历 cloudWorker.Template 中的容器列表
 	for i := range cloudWorker.Template.Spec.Containers {
@@ -499,13 +501,12 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService, b
 		// 添加~/.kube/config文件挂载配置
 		// container中存放的路径
 		container.VolumeMounts = append(container.VolumeMounts, v1.VolumeMount{
-			Name:      "file-volume",
+			Name:      "kubeconfig-volume",
 			// container中位置为/home/data/.kube/
 			MountPath: fmt.Sprintf("%s/%s", workerParam.Env["DATA_PATH_PREFIX"], ".kube"),
 		})
-	}
 
-	
+	}
 	
 	// create each cloud deployment
 	if cloudWorker.Template.ObjectMeta.Labels == nil {
@@ -551,7 +552,7 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService, b
 			Name: "kubeconfig-volume",
 			VolumeSource: v1.VolumeSource{
 				HostPath: &v1.HostPathVolumeSource{
-					Path: "~/.kube/config",  // 主机上的文件路径
+					Path: "/home/hx/.kube",  // 主机上的文件路径
 				},
 			},
 		},
@@ -565,12 +566,6 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService, b
 
 	return nil
 
-	// create cloud pod
-	// _, err := runtime.CreatePodWithTemplate(c.kubeClient,
-	// 	service,
-	// 	&service.Spec.CloudWorker.Template,
-	// 	&workerParam)
-	// return err
 }
 
 
@@ -649,7 +644,7 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
 			// 添加~/.kube/config文件挂载配置
 			// container中存放的路径
 			container.VolumeMounts = append(container.VolumeMounts, v1.VolumeMount{
-				Name:      "file-volume",
+				Name:      "kubeconfig-volume",
 				// container中位置为/home/data/.kube/
 				MountPath: fmt.Sprintf("%s/%s", workerParam.Env["DATA_PATH_PREFIX"], ".kube"),
 			})
@@ -701,7 +696,7 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
 				Name: "kubeconfig-volume",
 				VolumeSource: v1.VolumeSource{
 					HostPath: &v1.HostPathVolumeSource{
-						Path: "~/.kube/config",  // 主机上的文件路径
+						Path: "/home/nvidia/.kube",  // 主机上的文件路径
 					},
 				},
 			},
