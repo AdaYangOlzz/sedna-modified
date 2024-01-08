@@ -468,6 +468,7 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService, b
 		"BIG_MODEL_BIND_PORT": strconv.Itoa(int(bigModelPort)),
 		"FILE_URL":			fileUrl,
 		"LOG_LEVEL":		logLevel,
+		"NODE_NAME":		service.Spec.CloudWorker.Template.Spec.NodeName,
 	}
 
 	workerParam.WorkerType = jointMultiEdgeForCloud
@@ -524,6 +525,7 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
             "LC_SERVER":       c.cfg.LC.Server,
 			"FILE_URL":		   fileUrl,
 			"LOG_LEVEL":       logLevel,
+			"NODE_NAME":		edgeWorker.Template.Spec.NodeName,
         }
 
         workerParam.WorkerType = jointMultiEdgeForEdge
