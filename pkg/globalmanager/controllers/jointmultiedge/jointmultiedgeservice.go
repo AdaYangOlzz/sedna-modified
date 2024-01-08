@@ -437,6 +437,8 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService, b
 	// 定义一个 map，用于存储已经添加的挂载路径
 	mountedPaths := make(map[string]struct{})
 
+	cloudWorker := service.Spec.CloudWorker
+
 	// Set the model URLs and names in the environment variable outside the loop
 	var workerParam runtime.WorkerParam
 	
@@ -459,26 +461,116 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService, b
 			Name: "file",
 			EnvName: "FILE_URL",
 		})
+
 	}
 	
 	workerParam.Env = map[string]string{
 		"NAMESPACE":          service.Namespace,
 		"SERVICE_NAME":       service.Name,
-		"WORKER_NAME":        "cloudworker-" + utilrand.String(5),
+		"WORKER_NAME":        service.Name + "-cloudworker-" + utilrand.String(5),
 		"BIG_MODEL_BIND_PORT": strconv.Itoa(int(bigModelPort)),
 		"FILE_URL":			fileUrl,
 		"LOG_LEVEL":		logLevel,
 		"NODE_NAME":		service.Spec.CloudWorker.Template.Spec.NodeName,
+		"KUBECONFIG":		"/home/data/.kube/config", // py中读取的kube_config文件位置
 	}
 
 	workerParam.WorkerType = jointMultiEdgeForCloud
 
+	// 遍历 cloudWorker.Template 中的容器列表
+	for i := range cloudWorker.Template.Spec.Containers {
+		// 获取容器
+		container := &cloudWorker.Template.Spec.Containers[i]
+
+		// 将 workerParam.Env 中的环境变量应用到容器
+		for key, value := range workerParam.Env {
+			container.Env = append(container.Env, v1.EnvVar{
+				Name:  key,
+				Value: value,
+			})
+		}
+
+		// 添加配置文件挂载配置
+		container.VolumeMounts = append(container.VolumeMounts, v1.VolumeMount{
+			Name:      "file-volume",
+			MountPath: fmt.Sprintf("%s/%s", workerParam.Env["DATA_PATH_PREFIX"], filepath.Base(fileUrl)),
+		})
+
+		// 添加~/.kube/config文件挂载配置
+		// container中存放的路径
+		container.VolumeMounts = append(container.VolumeMounts, v1.VolumeMount{
+			Name:      "file-volume",
+			// container中位置为/home/data/.kube/
+			MountPath: fmt.Sprintf("%s/%s", workerParam.Env["DATA_PATH_PREFIX"], ".kube"),
+		})
+	}
+
+	
+	
+	// create each cloud deployment
+	if cloudWorker.Template.ObjectMeta.Labels == nil {
+		cloudWorker.Template.ObjectMeta.Labels = make(map[string]string)
+	}
+	
+	// 添加或更新 labels，以 nodeName 为标签键
+	cloudWorker.Template.ObjectMeta.Labels["kubernetes.io/hostname"] = cloudWorker.Template.Spec.NodeName
+	cloudWorker.Template.ObjectMeta.Labels["jointmultiedge.sedna.io/name"] = service.Name
+
+	deployment := &appsv1.Deployment{
+		// 设置 Deployment 的元数据和规范
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      service.Name + "-cloudWorker-" + utilrand.String(5),
+			Namespace: service.Namespace,
+		},
+		Spec: appsv1.DeploymentSpec{
+			// 设置 Deployment 的规范
+			Replicas: int32Ptr(1), // 设置副本数
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					// 使用 nodeName 作为选择条件
+					"kubernetes.io/hostname": cloudWorker.Template.Spec.NodeName,
+					"jointmultiedge.sedna.io/name":    service.Name,
+				},
+			},
+			Template: cloudWorker.Template,
+		},
+	}
+
+	// 在 Template 的 PodSpec 中添加 Volumes
+	// 填写实际本机上的地址
+	deployment.Spec.Template.Spec.Volumes = []v1.Volume{
+		{
+			Name: "file-volume",
+			VolumeSource: v1.VolumeSource{
+				HostPath: &v1.HostPathVolumeSource{
+					Path: fileUrl,  // 主机上的文件路径
+				},
+			},
+		},
+		{
+			Name: "kubeconfig-volume",
+			VolumeSource: v1.VolumeSource{
+				HostPath: &v1.HostPathVolumeSource{
+					Path: "~/.kube/config",  // 主机上的文件路径
+				},
+			},
+		},
+	}
+
+	// 将 Deployment 创建到集群中
+	_, err := c.kubeClient.AppsV1().Deployments(service.Namespace).Create(context.TODO(), deployment, metav1.CreateOptions{})
+	if err != nil {
+		return err
+	}   
+
+	return nil
+
 	// create cloud pod
-	_, err := runtime.CreatePodWithTemplate(c.kubeClient,
-		service,
-		&service.Spec.CloudWorker.Template,
-		&workerParam)
-	return err
+	// _, err := runtime.CreatePodWithTemplate(c.kubeClient,
+	// 	service,
+	// 	&service.Spec.CloudWorker.Template,
+	// 	&workerParam)
+	// return err
 }
 
 
@@ -527,6 +619,7 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
 			"LOG_LEVEL":       logLevel,
 			"NODE_NAME":		edgeWorker.Template.Spec.NodeName,
 			"DATA_PATH_PREFIX": "/home/data",
+			"KUBECONFIG":		"/home/data/.kube/config", // py中读取的kube_config文件位置
         }
 
         workerParam.WorkerType = jointMultiEdgeForEdge
@@ -547,10 +640,18 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
 				})
 			}
 
-			// 添加文件挂载配置
+			// 添加配置文件挂载配置
 			container.VolumeMounts = append(container.VolumeMounts, v1.VolumeMount{
 				Name:      "file-volume",
 				MountPath: fmt.Sprintf("%s/%s", workerParam.Env["DATA_PATH_PREFIX"], filepath.Base(fileUrl)),
+			})
+
+			// 添加~/.kube/config文件挂载配置
+			// container中存放的路径
+			container.VolumeMounts = append(container.VolumeMounts, v1.VolumeMount{
+				Name:      "file-volume",
+				// container中位置为/home/data/.kube/
+				MountPath: fmt.Sprintf("%s/%s", workerParam.Env["DATA_PATH_PREFIX"], ".kube"),
 			})
 		}
 
@@ -568,7 +669,7 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
 		deployment := &appsv1.Deployment{
 			// 设置 Deployment 的元数据和规范
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      "edgeworker-deployment-" + utilrand.String(5),
+				Name:      service.Name + "-edgeworker-" + utilrand.String(5),
 				Namespace: service.Namespace,
 			},
 			Spec: appsv1.DeploymentSpec{
@@ -582,20 +683,11 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
 					},
 				},
 				Template: edgeWorker.Template,
-				// Volumes: []v1.Volume{
-				// 	{
-				// 		Name: "file-volume",
-				// 		VolumeSource: v1.VolumeSource{
-				// 			HostPath: &v1.HostPathVolumeSource{
-				// 				Path: fileUrl,  // 主机上的文件路径
-				// 			},
-				// 		},
-				// 	},
-				// },
 			},
 		}
 
 		// 在 Template 的 PodSpec 中添加 Volumes
+		// 填写实际本机上的地址
 		deployment.Spec.Template.Spec.Volumes = []v1.Volume{
 			{
 				Name: "file-volume",
@@ -605,10 +697,15 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
 					},
 				},
 			},
+			{
+				Name: "kubeconfig-volume",
+				VolumeSource: v1.VolumeSource{
+					HostPath: &v1.HostPathVolumeSource{
+						Path: "~/.kube/config",  // 主机上的文件路径
+					},
+				},
+			},
 		}
-
-		
-		
 
 		// 将 Deployment 创建到集群中
 		_, err := c.kubeClient.AppsV1().Deployments(service.Namespace).Create(context.TODO(), deployment, metav1.CreateOptions{})
