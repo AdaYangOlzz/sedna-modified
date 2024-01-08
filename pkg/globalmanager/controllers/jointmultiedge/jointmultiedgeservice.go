@@ -526,10 +526,13 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
 			"FILE_URL":		   fileUrl,
 			"LOG_LEVEL":       logLevel,
 			"NODE_NAME":		edgeWorker.Template.Spec.NodeName,
+			"DATA_PATH_PREFIX": "/home/data",
         }
 
         workerParam.WorkerType = jointMultiEdgeForEdge
         workerParam.HostNetwork = true
+
+		
 
 		// 遍历 edgeWorker.Template 中的容器列表
 		for i := range edgeWorker.Template.Spec.Containers {
@@ -543,7 +546,15 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
 					Value: value,
 				})
 			}
+
+			// 添加文件挂载配置
+			container.VolumeMounts = append(container.VolumeMounts, v1.VolumeMount{
+				Name:      "file-volume",
+				MountPath: fmt.Sprintf("%s/%s", workerParam.Env["DATA_PATH_PREFIX"], filepath.Base(fileUrl)),
+			})
 		}
+
+		
 		
         // create each edge deployment
 		if edgeWorker.Template.ObjectMeta.Labels == nil {
@@ -571,8 +582,31 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
 					},
 				},
 				Template: edgeWorker.Template,
+				// Volumes: []v1.Volume{
+				// 	{
+				// 		Name: "file-volume",
+				// 		VolumeSource: v1.VolumeSource{
+				// 			HostPath: &v1.HostPathVolumeSource{
+				// 				Path: fileUrl,  // 主机上的文件路径
+				// 			},
+				// 		},
+				// 	},
+				// },
 			},
 		}
+
+		// 在 Template 的 PodSpec 中添加 Volumes
+		deployment.Spec.Template.Spec.Volumes = []v1.Volume{
+			{
+				Name: "file-volume",
+				VolumeSource: v1.VolumeSource{
+					HostPath: &v1.HostPathVolumeSource{
+						Path: fileUrl,  // 主机上的文件路径
+					},
+				},
+			},
+		}
+
 		
 		
 
