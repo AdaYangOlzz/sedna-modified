@@ -519,7 +519,7 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService, b
 	deployment := &appsv1.Deployment{
 		// 设置 Deployment 的元数据和规范
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      service.Name + "-cloudWorker-" + utilrand.String(5),
+			Name:      service.Name + "-cloudworker-" + utilrand.String(5),
 			Namespace: service.Namespace,
 		},
 		Spec: appsv1.DeploymentSpec{
