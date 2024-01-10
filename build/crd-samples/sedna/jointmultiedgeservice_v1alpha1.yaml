@@ -84,6 +84,8 @@ spec:
         path: "/home/nvidia/zwh/Auto-Edge/files"
       logLevel:
         level: "DEBUG"
+      kubeConfig:
+        path: "/home/nvidia/.kube"
       template:
         spec:
           nodeName: edge2
