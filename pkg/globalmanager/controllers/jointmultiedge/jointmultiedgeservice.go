@@ -478,7 +478,7 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService, b
 	workerParam.Env = map[string]string{
 		"NAMESPACE":          service.Namespace,
 		"SERVICE_NAME":       service.Name,
-		"WORKER_NAME":        service.Name + "-cloudworker-" + utilrand.String(5),
+		// "WORKER_NAME":        service.Name + "-cloudworker-" + utilrand.String(5),
 		"BIG_MODEL_BIND_PORT": strconv.Itoa(int(bigModelPort)),
 		"FILE_URL":			fileUrl,
 		"LOG_LEVEL":		logLevel,
@@ -534,7 +534,7 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService, b
 	deployment := &appsv1.Deployment{
 		// 设置 Deployment 的元数据和规范
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      service.Name + "-cloudworker-",
+			Name:      service.Name + "-cloudworker-" + utilrand.String(5),
 			Namespace: service.Namespace,
 		},
 		Spec: appsv1.DeploymentSpec{
@@ -693,7 +693,7 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
 		deployment := &appsv1.Deployment{
 			// 设置 Deployment 的元数据和规范
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      service.Name + "-edgeworker-",
+				Name:      service.Name + "-edgeworker-" + utilrand.String(5),
 				Namespace: service.Namespace,
 			},
 			Spec: appsv1.DeploymentSpec{
