@@ -1,97 +1,345 @@
 apiVersion: sedna.io/v1alpha1
 kind: JointMultiEdgeService
 metadata:
-  name: multi-edge-test-example
-  namespace: default
+  name: generator
+  namespace: auto-edge
 spec:
   edgeWorker:
-    - model:
-        name: "helmet-detection-inference-little-model"
+    - file:
+        path: "/home/nvidia/zwh/Auto-Edge/files"
+      logLevel:
+        level: "DEBUG"
+      kubeConfig:
+        path: "/home/nvidia/.kube"
       template:
         spec:
-          nodeName: $EDGE_NODE
+          nodeName: edge1
           dnsPolicy: ClusterFirstWithHostNet
           containers:
-          - image: adayoung/sedna-joint-little-model:v1.2
+          - image: onecheck/generator:v1.0.0
             imagePullPolicy: IfNotPresent
-            name:  little-model
-            env:  # user defined environments
-            - name: input_shape
-              value: "416,736"
-            - name: "video_url"
-              value: "rtsp://localhost/video"
-            - name: "all_examples_inference_output"
-              value: "/data/output"
-            - name: "hard_example_cloud_inference_output"
-              value: "/data/hard_example_cloud_inference_output"
-            - name: "hard_example_edge_inference_output"
-              value: "/data/hard_example_edge_inference_output"
-            resources:  # user defined resources
-              requests:
-                memory: 64M
-                cpu: 100m
-              limits:
-                memory: 2Gi
-            volumeMounts:
-              - name: outputdir
-                mountPath: /data/
-          volumes:   # user defined volumes
-            - name: outputdir
-              hostPath:
-                # user must create the directory in host
-                path: /joint_inference/output
-                type: Directory
-    - model:
-        name: "helmet-detection-inference-little-model"
+            name: generator
+            env:
+              - name: scheduler_port
+                value: "39400"
+              - name: controller_port
+                value: "39200"
+              - name: scheduler_name
+                value: cloud.kubeedge
+    - file:
+        path: "/home/nvidia/zwh/Auto-Edge/files"
+      logLevel:
+        level: "DEBUG"
+      kubeConfig:
+        path: "/home/nvidia/.kube"
       template:
         spec:
-          nodeName: edge1.kubeedge
+          nodeName: edge2
           dnsPolicy: ClusterFirstWithHostNet
           containers:
-          - image: adayoung/sedna-joint-little-model:v1.2
-            imagePullPolicy: IfNotPresent
-            name:  little-model
-            env:  # user defined environments
-            - name: input_shape
-              value: "416,736"
-            - name: "video_url"
-              value: "rtsp://localhost/video"
-            - name: "all_examples_inference_output"
-              value: "/data/output"
-            - name: "hard_example_cloud_inference_output"
-              value: "/data/hard_example_cloud_inference_output"
-            - name: "hard_example_edge_inference_output"
-              value: "/data/hard_example_edge_inference_output"
-            resources:  # user defined resources
-              requests:
-                memory: 64M
-                cpu: 100m
-              limits:
-                memory: 2Gi
-            volumeMounts:
-              - name: outputdir
-                mountPath: /data/
-          volumes:   # user defined volumes
-            - name: outputdir
-              hostPath:
-                # user must create the directory in host
-                path: /joint_inference/output
-                type: Directory
+            - image: onecheck/generator:v1.0.0
+              imagePullPolicy: IfNotPresent
+              name: generator
+              env:
+                - name: scheduler_port
+                  value: "39400"
+                - name: controller_port
+                  value: "39200"
+                - name: scheduler_name
+                  value: cloud.kubeedge
+---
 
+apiVersion: sedna.io/v1alpha1
+kind: JointMultiEdgeService
+metadata:
+  name: controller
+  namespace: auto-edge
+spec:
+  edgeWorker:
+    - file:
+        path: "/home/nvidia/zwh/Auto-Edge/files"
+      logLevel:
+        level: "DEBUG"
+      kubeConfig:
+        path: "/home/nvidia/.kube"
+      template:
+        spec:
+          nodeName: edge1
+          dnsPolicy: ClusterFirstWithHostNet
+          containers:
+          - image: onecheck/controller:v1.0.0
+            imagePullPolicy: IfNotPresent
+            name: controller
+            env:
+              - name: service_port
+                value: '{"car_detection": 39001}'
+              - name: distributor_port
+                value: "39500"
+              - name: distributor_name
+                value: cloud.kubeedge
+            ports:
+              - containerPort: 9200
+                hostPort: 39200
+    - file:
+        path: "/home/nvidia/zwh/Auto-Edge/files"
+      logLevel:
+        level: "DEBUG"
+      template:
+        spec:
+          nodeName: edge2
+          dnsPolicy: ClusterFirstWithHostNet
+          containers:
+          - image: onecheck/controller:v1.0.0
+            imagePullPolicy: IfNotPresent
+            name: controller
+            env:
+              - name: service_port
+                value: '{"car_detection": 39001}'
+              - name: distributor_port
+                value: "39500"
+              - name: distributor_name
+                value: cloud.kubeedge
+            ports:
+              - containerPort: 9200
+                hostPort: 39200
   cloudWorker:
-    model:
-      name: "helmet-detection-inference-big-model"
+    file:
+      path: "/home/hx/zwh/Auto-Edge/files"
+    kubeConfig:
+        path: "/home/hx/.kube"
     template:
       spec:
         nodeName: cloud.kubeedge
         dnsPolicy: ClusterFirstWithHostNet
         containers:
-          - image: kubeedge/sedna-example-joint-inference-helmet-detection-big:v0.3.0
-            name:  big-model
+          - image: onecheck/controller:v1.0.0
+            name:  controller
             imagePullPolicy: IfNotPresent
             env:  # user defined environments
-              - name: "input_shape"
-                value: "544,544"
-            resources:  # user defined resources
-              requests:
-                memory: 2Gi
+              - name: service_port
+                value: '{"car_detection": 39001}'
+              - name: distributor_port
+                value: "39500"
+              - name: distributor_name
+                value: cloud.kubeedge
+            ports:
+              - containerPort: 9200
+                hostPort: 39200
+
+---
+
+apiVersion: sedna.io/v1alpha1
+kind: JointMultiEdgeService
+metadata:
+  name: distributor
+  namespace: auto-edge
+spec:
+  cloudWorker:
+    file:
+      path: "/home/hx/zwh/Auto-Edge/files"
+    kubeConfig:
+        path: "/home/hx/.kube"
+    template:
+      spec:
+        nodeName: cloud.kubeedge
+        dnsPolicy: ClusterFirstWithHostNet
+        containers:
+          - image: onecheck/distributor:v1.0.0
+            name:  distributor
+            imagePullPolicy: IfNotPresent
+            env: # user defined environments
+              - name: "output_dir"
+                value: "/data/record_data"
+              - name: scheduler_port
+                value: "39400"
+              - name: scheduler_name
+                value: cloud.kubeedge
+            ports:
+              - containerPort: 9500
+                hostPort: 39500
+
+
+---
+
+apiVersion: sedna.io/v1alpha1
+kind: JointMultiEdgeService
+metadata:
+  name: scheduler
+  namespace: auto-edge
+spec:
+  cloudWorker:
+    file:
+      path: "/home/hx/zwh/Auto-Edge/files"
+    kubeConfig:
+        path: "/home/hx/.kube"
+    template:
+      spec:
+        nodeName: cloud.kubeedge
+        dnsPolicy: ClusterFirstWithHostNet
+        containers:
+          - image: onecheck/scheduler:v1.0.0
+            name:  scheduler
+            imagePullPolicy: IfNotPresent
+            env:  # user defined environments
+              - name: user_constraint
+                value: "0.1"
+              - name: controller_port
+                value: "39200"
+            ports:
+              - containerPort: 9400
+                hostPort: 39400
+
+---
+
+apiVersion: sedna.io/v1alpha1
+kind: JointMultiEdgeService
+metadata:
+  name: monitor
+  namespace: auto-edge
+spec:
+  edgeWorker:
+    - file:
+        path: "/home/nvidia/zwh/Auto-Edge/files"
+      logLevel:
+        level: "DEBUG"
+      kubeConfig:
+        path: "/home/nvidia/.kube"
+      template:
+        spec:
+          nodeName: edge1
+          dnsPolicy: ClusterFirstWithHostNet
+          containers:
+          - image: onecheck/monitor:v1.0.0
+            imagePullPolicy: IfNotPresent
+            name: monitor
+            env:
+              - name: interval
+                value: "5"
+              - name: iperf3_server
+                value: "False"
+              - name: iperf3_port
+                value: "35201"
+              - name: iperf3_server_name
+                value: cloud.kubeedge
+              - name: scheduler_name
+                value: cloud.kubeedge
+              - name: scheduler_port
+                value: "39400"
+    - file:
+        path: "/home/nvidia/zwh/Auto-Edge/files"
+      logLevel:
+        level: "DEBUG"
+      kubeConfig:
+        path: "/home/nvidia/.kube"
+      template:
+        spec:
+          nodeName: edge2
+          dnsPolicy: ClusterFirstWithHostNet
+          containers:
+          - image: onecheck/monitor:v1.0.0
+            imagePullPolicy: IfNotPresent
+            name: monitor
+            env:
+              - name: interval
+                value: "5"
+              - name: iperf3_server
+                value: "False"
+              - name: iperf3_port
+                value: "35202"
+              - name: iperf3_server_name
+                value: cloud.kubeedge
+              - name: scheduler_name
+                value: cloud.kubeedge
+              - name: scheduler_port
+                value: "39400"
+  cloudWorker:
+    file:
+      path: "/home/hx/zwh/Auto-Edge/files"
+    kubeConfig:
+        path: "/home/hx/.kube"
+    template:
+      spec:
+        nodeName: cloud.kubeedge
+        dnsPolicy: ClusterFirstWithHostNet
+        containers:
+          - image: onecheck/monitor:v1.0.0
+            name:  monitor
+            imagePullPolicy: IfNotPresent
+            env:  # user defined environments
+              - name: interval
+                value: "5"
+              - name: iperf3_server
+                value: "True"
+              - name: iperf3_ports
+                value: "[5201, 5202]"
+              - name: iperf3_server_name
+                value: cloud.kubeedge
+              - name: scheduler_name
+                value: cloud.kubeedge
+              - name: scheduler_port
+                value: "39400"
+            ports:
+              - containerPort: 5201
+                hostPort: 35201
+              - containerPort: 5202
+                hostPort: 35202
+
+---
+
+apiVersion: sedna.io/v1alpha1
+kind: JointMultiEdgeService
+metadata:
+  name: car-detection-service
+  namespace: auto-edge
+spec:
+  edgeWorker:
+    - file:
+        path: "/home/nvidia/zwh/Auto-Edge/model_lib"
+      logLevel:
+        level: "DEBUG"
+      kubeConfig:
+        path: "/home/nvidia/.kube"
+      template:
+        spec:
+          nodeName: edge1
+          dnsPolicy: ClusterFirstWithHostNet
+          containers:
+          - image: onecheck/car-detection:arm64-v1.0.0
+            imagePullPolicy: IfNotPresent
+            name: car-detection
+            ports:
+              - containerPort: 9001
+                hostPort: 39001
+    - file:
+        path: "/home/nvidia/zwh/Auto-Edge/model_lib"
+      logLevel:
+        level: "DEBUG"
+      kubeConfig:
+        path: "/home/nvidia/.kube"
+      template:
+        spec:
+          nodeName: edge2
+          dnsPolicy: ClusterFirstWithHostNet
+          containers:
+          - image: onecheck/car-detection:arm64-v1.0.0
+            imagePullPolicy: IfNotPresent
+            name: car-detection
+            ports:
+              - containerPort: 9001
+                hostPort: 39001
+  cloudWorker:
+    file:
+      path: "/home/hx/zwh/Auto-Edge/model_lib"
+    kubeConfig:
+        path: "/home/hx/.kube"
+    template:
+      spec:
+        nodeName: cloud.kubeedge
+        dnsPolicy: ClusterFirstWithHostNet
+        containers:
+          - image: onecheck/car-detection:v1.0.0
+            name:  car-detection
+            imagePullPolicy: IfNotPresent
+            ports:
+              - containerPort: 9001
+                hostPort: 39001
