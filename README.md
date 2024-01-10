@@ -2,7 +2,7 @@
 
 ## brief introduction
 
-This project is based on Sedna(https://github.com/zwh2119/Auto-Edge/tree/main).
+This project is based on Sedna(https://github.com/kubeedge/sedna).
 
 We added the "jointmultiedgeservice" section to complete our functionality.
 
