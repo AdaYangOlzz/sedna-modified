@@ -19,7 +19,6 @@ package jointmultiedge
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"time"
 	"path/filepath"
 	"reflect"
@@ -59,7 +58,6 @@ const (
 const (
 	jointMultiEdgeForEdge  = "Edge"
 	jointMultiEdgeForCloud = "Cloud"
-	BigModelPort           = 5000
 )
 
 // Kind contains the schema.GroupVersionKind for this controller type.
@@ -399,23 +397,22 @@ func isServiceFinished(j *sednav1.JointMultiEdgeService) bool {
 func (c *Controller) createWorkers(service *sednav1.JointMultiEdgeService) (active int32, err error) {
 	active = 0
 
-	var bigModelPort int32 = BigModelPort
 	// create cloud worker
-	err = c.createCloudWorker(service, bigModelPort)
+	err = c.createCloudWorker(service)
 	if err != nil {
 		return active, err
 	}
 	active++
 
 	// create k8s service for cloudPod
-	bigModelHost, err := runtime.CreateEdgeMeshService(c.kubeClient, service, jointMultiEdgeForCloud, bigModelPort)
-	// bigModelHost, err := runtime.CreateEdgeMeshServiceCustome(c.kubeClient, service)
+	// bigModelHost, err := runtime.CreateEdgeMeshService(c.kubeClient, service, jointMultiEdgeForCloud, bigModelPort)
+	bigModelHost, err := runtime.CreateEdgeMeshServiceCustome(c.kubeClient, service)
 	if err != nil {
 		return active, err
 	}
 
 	// create edge worker
-	err = c.createEdgeWorker(service, bigModelHost, bigModelPort)
+	err = c.createEdgeWorker(service, bigModelHost)
 	if err != nil {
 		return active, err
 	}
@@ -428,7 +425,7 @@ func (c *Controller) createWorkers(service *sednav1.JointMultiEdgeService) (acti
 
 // multiple models for cloud  modelName=url
 // unique volumeMount
-func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService, bigModelPort int32) error {
+func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService) error {
 	// ctx := context.Background()
 
 	if reflect.DeepEqual(service.Spec.CloudWorker, sednav1.CloudWorker{}) {
@@ -479,7 +476,6 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService, b
 		"NAMESPACE":          service.Namespace,
 		"SERVICE_NAME":       service.Name,
 		// "WORKER_NAME":        service.Name + "-cloudworker-" + utilrand.String(5),
-		"BIG_MODEL_BIND_PORT": strconv.Itoa(int(bigModelPort)),
 		"FILE_URL":			fileUrl,
 		"LOG_LEVEL":		logLevel,
 		"NODE_NAME":		service.Spec.CloudWorker.Template.Spec.NodeName,
@@ -587,7 +583,7 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService, b
 }
 
 
-func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bigModelHost string, bigModelPort int32) error {
+func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bigModelHost string) error {
     // ctx := context.Background()
 	// 没有edge直接返回
 	if reflect.DeepEqual(service.Spec.EdgeWorker, sednav1.EdgeWorker{}) {

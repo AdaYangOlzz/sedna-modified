@@ -250,7 +250,6 @@ func CreateEdgeMeshServiceCustome(kubeClient kubernetes.Interface, object Common
 		IntVal: serviceConfig.Port,
 	}
 	servicePort := serviceConfig.Port
-	nodePort := serviceConfig.NodePort
 
 	workerType := serviceConfig.Pos
 	serviceSpec := &v1.Service{
@@ -274,7 +273,6 @@ func CreateEdgeMeshServiceCustome(kubeClient kubernetes.Interface, object Common
 					Protocol:   "TCP",
 					Port:       servicePort,
 					TargetPort: targetPort,
-					NodePort: nodePort,
 				},
 			},
 		},
