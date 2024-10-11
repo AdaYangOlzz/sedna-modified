@@ -68,6 +68,17 @@ func generateLabels(object CommonInterface, workerType string) map[string]string
 	return labels
 }
 
+func generateLabelsForSelector(object CommonInterface, workerType string) map[string]string {
+	kind := object.GroupVersionKind().Kind
+	group := object.GroupVersionKind().Group
+
+	keyPrefix := strings.ToLower(kind + "." + group + "/")
+
+	labels := make(map[string]string)
+	labels[keyPrefix+"name"] = object.GetName()
+	return labels
+}
+
 // GenerateSelector generates the selector of an object for worker
 func GenerateSelector(object CommonInterface) (labels.Selector, error) {
 	ls := &metav1.LabelSelector{
@@ -262,7 +273,7 @@ func CreateEdgeMeshServiceCustome(kubeClient kubernetes.Interface, object Common
 			Labels: generateLabels(object, workerType),
 		},
 		Spec: v1.ServiceSpec{
-			Selector: generateLabels(object, workerType),
+			Selector: generateLabelsForSelector(object, workerType),
 			Type:     v1.ServiceTypeNodePort,
 			Ports: []v1.ServicePort{
 				{
