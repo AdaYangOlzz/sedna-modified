@@ -57,9 +57,9 @@ We assume that you have finished the k8s and kubeedge installation
   ```
 
 - how to build gm/lc image
-```sh
-make WHAT=gm
-make gmiamge
-make WHAT=lc
-docker buildx build --platform linux/arm64,linux/amd64 --build-arg GO_LDFLAGS="" -t repo:5000/adayoung/sedna-lc:v0.3.12 -f build/lc/Dockerfile . --push
-```
+  ```sh
+  make WHAT=gm
+  make gmiamge
+  make WHAT=lc
+  docker buildx build --platform linux/arm64,linux/amd64 --build-arg GO_LDFLAGS="" -t repo:5000/adayoung/sedna-lc:v0.3.12 -f build/lc/Dockerfile . --push
+  ```
