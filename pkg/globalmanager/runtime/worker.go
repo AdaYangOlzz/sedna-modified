@@ -249,13 +249,18 @@ func CreateEdgeMeshServiceCustome(kubeClient kubernetes.Interface, object Common
 	namespace := object.GetNamespace()
 	kind := object.GroupVersionKind().Kind
 
-	// 类型转换
 	jointMultiEdgeService, ok := object.(*sednav1.JointMultiEdgeService)
 	if !ok {
 		return "", fmt.Errorf("unexpected type: %T", object)
 	}
 
 	serviceConfig := jointMultiEdgeService.Spec.ServiceConfig
+
+	// no service
+	if serviceConfig.Port == 0 && serviceConfig.TargetPort == 0 && serviceConfig.NodePort == 0 && serviceConfig.Pos == "" {
+		klog.Infof("ServiceConfig is not set for %v %v/%v, skipping service creation", kind, namespace, name)
+		return "", nil
+	}
 
 	targetPort := intstr.IntOrString{
 		IntVal: serviceConfig.Port,

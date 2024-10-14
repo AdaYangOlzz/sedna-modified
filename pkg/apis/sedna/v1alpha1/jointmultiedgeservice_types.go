@@ -29,12 +29,8 @@ import (
 // JointInferenceService describes the data that a jointinferenceservice resource should have
 type JointMultiEdgeService struct {
 	metav1.TypeMeta `json:",inline"`
-
 	metav1.ObjectMeta `json:"metadata"`
-
-	// Spec   JointInferenceServiceSpec   `json:"spec"`
 	Spec   JointMultiEdgeServiceSpec   `json:"spec"`
-	// Status JointInferenceServiceStatus `json:"status,omitempty"`
 	Status JointMultiEdgeServiceStatus `json:"status,omitempty"`
 }
 
