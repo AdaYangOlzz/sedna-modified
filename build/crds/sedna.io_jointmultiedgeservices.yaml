@@ -54,6 +54,8 @@ spec:
                     properties:
                       paths:
                         type: array
+                        items:
+                          type: string
                     required:
                     - paths
                     type: object
@@ -7088,8 +7090,10 @@ spec:
                       properties:
                         paths:
                           type: array
+                          items:
+                            type: string
                       required:
-                      - path
+                      - paths
                       type: object     
                     logLevel:
                       description: adjust log level

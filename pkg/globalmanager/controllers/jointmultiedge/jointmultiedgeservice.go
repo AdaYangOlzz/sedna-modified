@@ -459,7 +459,7 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService) e
 			fileMap[fileName] = path 
 
 			// 创建唯一的挂载名称
-			volumeName := fmt.Sprintf("%s-volume", fileName)
+			volumeName := fmt.Sprintf("%s-volume", strings.ToLower(strings.ReplaceAll(fileName, " ", "-")))
 
 			workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
 				URL: &runtime.MountURL{
@@ -518,7 +518,7 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService) e
 		// 添加配置文件挂载配置
 		for fileName, fileUrl := range fileMap {
 			// 创建唯一的挂载点名称
-			volumeName := fmt.Sprintf("%s-volume", fileName)
+			volumeName := fmt.Sprintf("%s-volume", strings.ToLower(strings.ReplaceAll(fileName, " ", "-")))
 			// 获取文件的基本名作为挂载路径的最后部分
 			mountFileName := filepath.Base(fileUrl)
 			// 构建完整的挂载路径
@@ -631,7 +631,7 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
                 fileMap[fileName] = path 
 
                 // 创建唯一的挂载名称
-                volumeName := fmt.Sprintf("%s-volume", fileName)
+                volumeName := fmt.Sprintf("%s-volume", strings.ToLower(strings.ReplaceAll(fileName, " ", "-")))
 
                 workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
                     URL: &runtime.MountURL{
