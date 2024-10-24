@@ -65,7 +65,7 @@ type LogLevel struct{
 
 // ConfFile describes the configuration file
 type ConfFile struct {
-	Path string `json:"path"`
+	Paths []string `json:"paths"`
 }
 
 type KubeConfig struct {

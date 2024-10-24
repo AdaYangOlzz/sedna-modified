@@ -52,10 +52,10 @@ spec:
                   file:
                     description: configuration file path
                     properties:
-                      path:
-                        type: string
+                      paths:
+                        type: array
                     required:
-                    - path
+                    - paths
                     type: object
                   logLevel:
                     description: adjust log level
@@ -7086,8 +7086,8 @@ spec:
                     file:
                       description: configuration file path
                       properties:
-                        path:
-                          type: string
+                        paths:
+                          type: array
                       required:
                       - path
                       type: object     
