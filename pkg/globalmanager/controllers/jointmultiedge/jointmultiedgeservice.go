@@ -38,6 +38,7 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/klog/v2"
+	"strings"
 	k8scontroller "k8s.io/kubernetes/pkg/controller"
 
 	sednav1 "github.com/adayangolzz/sedna-modified/pkg/apis/sedna/v1alpha1"
@@ -423,206 +424,164 @@ func (c *Controller) createWorkers(service *sednav1.JointMultiEdgeService) (acti
 
 
 
-// multiple models for cloud  modelName=url
-// unique volumeMount
 func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService) error {
-	// ctx := context.Background()
-
-	if reflect.DeepEqual(service.Spec.CloudWorker, sednav1.CloudWorker{}) {
-		return nil
-	}
-	mountedPaths := make(map[string]struct{})
-	fileMap := make(map[string]string)
-
-	cloudWorker := service.Spec.CloudWorker
-
-	// Set the model URLs and names in the environment variable outside the loop
-	var workerParam runtime.WorkerParam
-
-	// LOG_LEVEL写入env
-	logLevel := service.Spec.CloudWorker.LogLevel.Level
-
-	// 初始化环境变量映射
-	envMap := make(map[string]string)
-
-	// 处理多个文件挂载
-	for _, detail := range service.Spec.CloudWorker.File.Paths { 
-		// filename
-		fileName := filepath.Base(detail) 
-		path := detail // 文件的完整路径
-
-		dirUrl := filepath.Dir(path)
-		if _, exists := mountedPaths[dirUrl]; exists {
-			fmt.Printf("duplicate mount path: %s\n", dirUrl)
-		} else {
-			mountedPaths[dirUrl] = struct{}{}
-			fileMap[fileName] = path 
-
-			// 创建唯一的挂载名称
-			volumeName := fmt.Sprintf("%s-volume", strings.ToLower(strings.ReplaceAll(fileName, " ", "-")))
-
-			workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
-				URL: &runtime.MountURL{
-					URL:                   path,
-					DownloadByInitializer: true,
-				},
-				Name: volumeName, 
-				EnvName: volumeName, 
-			})
-
-			envMap[volumeName] = path
-		}
-	}
-
-	if _, exists := mountedPaths[dirUrl]; exists {
-		fmt.Printf("duplicate mount path: %s\n", dirUrl)
-	}else{
-		mountedPaths[dirUrl] = struct{}{}
-
-	}
-	
-	workerParam.Env = map[string]string{
-		"NAMESPACE":          service.Namespace,
-		"SERVICE_NAME":       service.Name,
-		"LOG_LEVEL":		logLevel,
-		"NODE_NAME":		service.Spec.CloudWorker.Template.Spec.NodeName,
-		"DATA_PATH_PREFIX": "/home/data",
-	}
-	// file appneded
-	for key, value := range envMap {
-		envName := fmt.Sprintf("%s-url", key)
-        workerParam.Env[envName] = value
+    if reflect.DeepEqual(service.Spec.CloudWorker, sednav1.CloudWorker{}) {
+        return nil
     }
-	
 
-	workerParam.WorkerType = jointMultiEdgeForCloud
-	workerParam.HostNetwork = true
-
-	// 遍历 cloudWorker.Template 中的容器列表
-	for i := range cloudWorker.Template.Spec.Containers {
-		// 获取容器
-		container := &cloudWorker.Template.Spec.Containers[i]
-
-		// 将 workerParam.Env 中的环境变量应用到容器
-		for key, value := range workerParam.Env {
-			container.Env = append(container.Env, v1.EnvVar{
-				Name:  key,
-				Value: value,
-			})
-		}
-
-		// 添加配置文件挂载配置
-		for fileName, fileUrl := range fileMap {
-			// 创建唯一的挂载点名称
-			volumeName := fmt.Sprintf("%s-volume", strings.ToLower(strings.ReplaceAll(fileName, " ", "-")))
-			// 获取文件的基本名作为挂载路径的最后部分
-			mountFileName := filepath.Base(fileUrl)
-			// 构建完整的挂载路径
-			container.VolumeMounts = append(container.VolumeMounts, v1.VolumeMount{
-				Name:      volumeName,
-				MountPath: fmt.Sprintf("%s/%s", workerParam.Env["DATA_PATH_PREFIX"], mountFileName),
-			})
-		}
-		
-
+    cloudWorker := service.Spec.CloudWorker
+    var workerParam = runtime.WorkerParam{
+		Env:    make(map[string]string),
+		Mounts: make([]runtime.WorkerMount, 0),
 	}
-	
-	// create each cloud deployment
-	if cloudWorker.Template.ObjectMeta.Labels == nil {
-		cloudWorker.Template.ObjectMeta.Labels = make(map[string]string)
-	}
-	
-	// 添加或更新 labels，以 nodeName 为标签键
-	cloudWorker.Template.ObjectMeta.Labels["kubernetes.io/hostname"] = cloudWorker.Template.Spec.NodeName
-	cloudWorker.Template.ObjectMeta.Labels["jointmultiedge.sedna.io/name"] = service.Name
+    logLevel := service.Spec.CloudWorker.LogLevel.Level
 
-	deployment := &appsv1.Deployment{
-		// 设置 Deployment 的元数据和规范
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      service.Name + "-cloudworker-" + utilrand.String(5),
-			Namespace: service.Namespace,
-		},
-		Spec: appsv1.DeploymentSpec{
-			// 设置 Deployment 的规范
-			Replicas: int32Ptr(1), // 设置副本数
-			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					// 使用 nodeName 作为选择条件
-					"kubernetes.io/hostname": cloudWorker.Template.Spec.NodeName,
-					"jointmultiedge.sedna.io/name":    service.Name,
-				},
-			},
-			Template: cloudWorker.Template,
-		},
+    
+    envMap := make(map[string]string)
+    mountedPaths := make(map[string]struct{})
+    volumeCounter := 1 
+
+    // multiple file mount
+    for _, path := range service.Spec.CloudWorker.File.Paths {
+        dirPath := filepath.Dir(path)
+
+		// not exist
+        if _, exists := mountedPaths[dirPath]; !exists {
+            mountedPaths[dirPath] = struct{}{}
+
+            volumeName := fmt.Sprintf("volume%d", volumeCounter)
+
+            envMap[fmt.Sprintf("VOLUME_%d", volumeCounter)] = dirPath
+
+            // 添加挂载配置
+            workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
+                URL: &runtime.MountURL{
+                    URL:                   dirPath,
+                    DownloadByInitializer: true,
+                },
+                Name: volumeName,
+                EnvName: volumeName,
+            })
+
+            workerParam.Env[fmt.Sprintf("VOLUME_%d", volumeCounter)] = dirPath
+            volumeCounter++
+        }
+    }
+
+    workerParam.Env["VOLUME_NUM"] = fmt.Sprintf("%d", volumeCounter-1)
+
+    workerParam.Env = map[string]string{
+        "NAMESPACE":          service.Namespace,
+        "SERVICE_NAME":       service.Name,
+        "LOG_LEVEL":         logLevel,
+        "NODE_NAME":         service.Spec.CloudWorker.Template.Spec.NodeName,
+        "DATA_PATH_PREFIX":  "/home/data",
+    }
+
+	if len(cloudWorker.Template.Spec.Containers) == 0 {
+		return fmt.Errorf("containers in cloud worker template is empty")
 	}
 
-	for fileName, fileUrl := range fileMap {
-		deployment.Spec.Template.Spec.Volumes = append(deployment.Spec.Template.Spec.Volumes, v1.Volume{
-			Name: fmt.Sprintf("%s-volume", fileName),
-			VolumeSource: v1.VolumeSource{
-				HostPath: &v1.HostPathVolumeSource{
-					Path: fileUrl, // 主机上的文件路径
-				},
-			},
-		})
-	}
+    for i := range cloudWorker.Template.Spec.Containers {
+        container := &cloudWorker.Template.Spec.Containers[i]
 
-	// 将 Deployment 创建到集群中
-	_, err := c.kubeClient.AppsV1().Deployments(service.Namespace).Create(context.TODO(), deployment, metav1.CreateOptions{})
-	if err != nil {
-		return err
-	}   
+        // inject env
+        for key, value := range workerParam.Env {
+            container.Env = append(container.Env, v1.EnvVar{
+                Name:  key,
+                Value: value,
+            })
+        }
 
-	return nil
+        // mount file
+        for volumeName, _ := range envMap {
+            container.VolumeMounts = append(container.VolumeMounts, v1.VolumeMount{
+                Name:      volumeName,
+                MountPath: fmt.Sprintf("%s/%s", workerParam.Env["DATA_PATH_PREFIX"], volumeName),
+            })
+        }
+    }
 
+    deployment := &appsv1.Deployment{
+        ObjectMeta: metav1.ObjectMeta{
+            Name:      service.Name + "-cloudworker-" + utilrand.String(5),
+            Namespace: service.Namespace,
+        },
+        Spec: appsv1.DeploymentSpec{
+            Replicas: int32Ptr(1),
+            Selector: &metav1.LabelSelector{
+                MatchLabels: map[string]string{
+                    "kubernetes.io/hostname": cloudWorker.Template.Spec.NodeName,
+                    "jointmultiedge.sedna.io/name": service.Name,
+                },
+            },
+            Template: cloudWorker.Template,
+        },
+    }
+
+	deployment.Spec.Template.Spec.Volumes = make([]v1.Volume, 0)
+
+    for volumeName, dirPath := range envMap {
+        deployment.Spec.Template.Spec.Volumes = append(deployment.Spec.Template.Spec.Volumes, v1.Volume{
+            Name: volumeName,
+            VolumeSource: v1.VolumeSource{
+                HostPath: &v1.HostPathVolumeSource{
+                    Path: dirPath,
+                },
+            },
+        })
+    }
+
+    _, err := c.kubeClient.AppsV1().Deployments(service.Namespace).Create(context.TODO(), deployment, metav1.CreateOptions{})
+    if err != nil {
+        return err
+    }
+
+    return nil
 }
 
 
 func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bigModelHost string) error {
-    // 没有edge直接返回
     if reflect.DeepEqual(service.Spec.EdgeWorker, sednav1.EdgeWorker{}) {
         return nil
     }
-    // 定义一个 map，用于存储已经添加的挂载路径
-    mountedPaths := make(map[string]struct{})
-    fileMap := make(map[string]string)
 
     for _, edgeWorker := range service.Spec.EdgeWorker {
-        var workerParam runtime.WorkerParam
+        var workerParam = runtime.WorkerParam{
+			Env:    make(map[string]string),
+			Mounts: make([]runtime.WorkerMount, 0),
+		}
 
-        // LOG_LEVEL
         logLevel := edgeWorker.LogLevel.Level
 
-        // 处理多个文件挂载
+        mountedPaths := make(map[string]struct{})
+        volumeCounter := 1 // 用于生成环境变量名
+
         for _, detail := range edgeWorker.File.Paths {
-            fileName := filepath.Base(detail)
-            path := detail // 文件的完整路径
-
+            path := detail 
             dirUrl := filepath.Dir(path)
-            if _, exists := mountedPaths[dirUrl]; exists {
-                fmt.Printf("duplicate mount path: %s\n", dirUrl)
-            } else {
-                mountedPaths[dirUrl] = struct{}{}
-                fileMap[fileName] = path 
 
-                // 创建唯一的挂载名称
-                volumeName := fmt.Sprintf("%s-volume", strings.ToLower(strings.ReplaceAll(fileName, " ", "-")))
+            if _, exists := mountedPaths[dirUrl]; !exists {
+                mountedPaths[dirUrl] = struct{}{}
+
+                volumeName := fmt.Sprintf("volume%d", volumeCounter)
+
+                workerParam.Env[fmt.Sprintf("VOLUME_%d", volumeCounter)] = dirUrl
 
                 workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
                     URL: &runtime.MountURL{
-                        URL:                   path,
+                        URL:                   dirUrl,
                         DownloadByInitializer: true,
                     },
                     Name: volumeName,
                     EnvName: volumeName,
                 })
 
-                // 添加环境变量到映射
-                workerParam.Env[volumeName] = path
+                volumeCounter++
             }
         }
 
-        
+        workerParam.Env["VOLUME_NUM"] = fmt.Sprintf("%d", volumeCounter-1)
 
         workerParam.Env["NAMESPACE"] = service.Namespace
         workerParam.Env["SERVICE_NAME"] = service.Name
@@ -634,11 +593,16 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
         workerParam.WorkerType = jointMultiEdgeForEdge
         workerParam.HostNetwork = true
 
-        // 遍历 edgeWorker.Template 中的容器列表
         for i := range edgeWorker.Template.Spec.Containers {
             container := &edgeWorker.Template.Spec.Containers[i]
 
-            // 将 workerParam.Env 中的环境变量应用到容器
+			if container.Env == nil {
+				container.Env = []v1.EnvVar{}
+			}
+			if container.VolumeMounts == nil {
+				container.VolumeMounts = []v1.VolumeMount{}
+			}
+
             for key, value := range workerParam.Env {
                 container.Env = append(container.Env, v1.EnvVar{
                     Name:  key,
@@ -646,19 +610,16 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
                 })
             }
 
-            // 添加配置文件挂载配置
-            for fileName, fileUrl := range fileMap {
-                volumeName := fmt.Sprintf("%s-volume", fileName)
-                mountFileName := filepath.Base(fileUrl)
-                container.VolumeMounts = append(container.VolumeMounts, v1.VolumeMount{
-                    Name:      volumeName,
-                    MountPath: fmt.Sprintf("%s/%s", workerParam.Env["DATA_PATH_PREFIX"], mountFileName),
-                })
+            for volumeName, dirPath := range workerParam.Env {
+                if strings.HasPrefix(volumeName, "VOLUME_") {
+                    container.VolumeMounts = append(container.VolumeMounts, v1.VolumeMount{
+                        Name:      volumeName,
+                        MountPath: fmt.Sprintf("%s/%s", workerParam.Env["DATA_PATH_PREFIX"], filepath.Base(dirPath)),
+                    })
+                }
             }
-
         }
 
-        // create each edge deployment
         if edgeWorker.Template.ObjectMeta.Labels == nil {
             edgeWorker.Template.ObjectMeta.Labels = make(map[string]string)
         }
@@ -681,20 +642,21 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
                 Template: edgeWorker.Template,
             },
         }
-
-
-        for fileName, fileUrl := range fileMap {
-            deployment.Spec.Template.Spec.Volumes = append(deployment.Spec.Template.Spec.Volumes, v1.Volume{
-                Name: fmt.Sprintf("%s-volume", fileName),
-                VolumeSource: v1.VolumeSource{
-                    HostPath: &v1.HostPathVolumeSource{
-                        Path: fileUrl,
+		deployment.Spec.Template.Spec.Volumes = make([]v1.Volume, 0)
+		
+        for volumeName, dirPath := range workerParam.Env {
+            if strings.HasPrefix(volumeName, "VOLUME_") {
+                deployment.Spec.Template.Spec.Volumes = append(deployment.Spec.Template.Spec.Volumes, v1.Volume{
+                    Name: volumeName,
+                    VolumeSource: v1.VolumeSource{
+                        HostPath: &v1.HostPathVolumeSource{
+                            Path: dirPath,
+                        },
                     },
-                },
-            })
+                })
+            }
         }
 
-        // 将 Deployment 创建到集群中
         _, err := c.kubeClient.AppsV1().Deployments(service.Namespace).Create(context.TODO(), deployment, metav1.CreateOptions{})
         if err != nil {
             return err

@@ -27,7 +27,7 @@ __pycache__/
 *.pyc
 
 # go build output
-/_output
+_output
 
 # AI model files
 *.pth
