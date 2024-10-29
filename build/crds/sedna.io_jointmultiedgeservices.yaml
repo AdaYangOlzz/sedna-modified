@@ -41,14 +41,6 @@ spec:
                 description: CloudWorker describes the data a cloud worker should
                   have
                 properties:
-                  kubeConfig:
-                    description: set ~/.kube path
-                    properties:
-                      path:
-                        type: string
-                    required:
-                    - path
-                    type: object
                   file:
                     description: configuration file path
                     properties:
@@ -7078,7 +7070,6 @@ spec:
                     type: object
                 required:
                 - template
-                - kubeConfig
                 type: object
               edgeWorker:
                 description: EdgeWorker describes the data a edge worker should have
@@ -7103,14 +7094,6 @@ spec:
                       required:
                       - level
                       type: object       
-                    kubeConfig:
-                      description: set ~/.kube path
-                      properties:
-                        path:
-                          type: string
-                      required:
-                      - path
-                      type: object
                     template:
                       description: PodTemplateSpec describes the data a pod should have
                         when created from a template
@@ -14122,7 +14105,6 @@ spec:
                       type: object
                   required:
                   - template
-                  - kubeConfig
                   type: object
                 type: array
               serviceConfig:

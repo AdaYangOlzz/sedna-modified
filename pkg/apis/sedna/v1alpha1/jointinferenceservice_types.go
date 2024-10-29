@@ -46,7 +46,6 @@ type JointInferenceServiceSpec struct {
 type EdgeWorker struct {
 	File 			  ConfFile			`json:"file"`
 	LogLevel			  LogLevel			`json:"logLevel"`
-	Config			  KubeConfig        `json:"kubeConfig"`
 	HardExampleMining HardExampleMining  `json:"hardExampleMining"`
 	Template          v1.PodTemplateSpec `json:"template"`
 }
@@ -54,7 +53,6 @@ type EdgeWorker struct {
 // CloudWorker describes the data a cloud worker should have
 type CloudWorker struct {
 	File 			  ConfFile			`json:"file"`
-	Config			  KubeConfig        `json:"kubeConfig"`
 	LogLevel		  LogLevel			`json:"logLevel"`
 	Template v1.PodTemplateSpec `json:"template"`
 }
@@ -68,9 +66,6 @@ type ConfFile struct {
 	Paths []string `json:"paths"`
 }
 
-type KubeConfig struct {
-	Path string `json:"path"`
-}
 
 
 // HardExampleMining describes the hard example algorithm to be used

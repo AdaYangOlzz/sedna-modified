@@ -473,10 +473,7 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService) e
 			envMap[volumeName] = path
 		}
 	}
-	// kubeConfig挂载
-	kubeConfigUrl := cloudWorker.Config.Path
 
-	dirUrl := filepath.Dir(kubeConfigUrl)
 	if _, exists := mountedPaths[dirUrl]; exists {
 		fmt.Printf("duplicate mount path: %s\n", dirUrl)
 	}else{
@@ -490,7 +487,6 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService) e
 		"LOG_LEVEL":		logLevel,
 		"NODE_NAME":		service.Spec.CloudWorker.Template.Spec.NodeName,
 		"DATA_PATH_PREFIX": "/home/data",
-		"KUBECONFIG":		"/home/data/.kube/config", // py中读取的kube_config文件位置
 	}
 	// file appneded
 	for key, value := range envMap {
@@ -529,14 +525,6 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService) e
 		}
 		
 
-		// 添加~/.kube/config文件挂载配置
-		// container中存放的路径
-		container.VolumeMounts = append(container.VolumeMounts, v1.VolumeMount{
-			Name:      "kubeconfig-volume",
-			// container中位置为/home/data/.kube/
-			MountPath: fmt.Sprintf("%s/%s", workerParam.Env["DATA_PATH_PREFIX"], ".kube"),
-		})
-
 	}
 	
 	// create each cloud deployment
@@ -565,19 +553,6 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService) e
 				},
 			},
 			Template: cloudWorker.Template,
-		},
-	}
-
-	// 在 Template 的 PodSpec 中添加 Volumes
-	// 填写实际本机上的地址
-	deployment.Spec.Template.Spec.Volumes = []v1.Volume{
-		{
-			Name: "kubeconfig-volume",
-			VolumeSource: v1.VolumeSource{
-				HostPath: &v1.HostPathVolumeSource{
-					Path: kubeConfigUrl,  // 主机上的文件路径
-				},
-			},
 		},
 	}
 
@@ -647,15 +622,7 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
             }
         }
 
-        // kubeConfig挂载
-        kubeConfigUrl := edgeWorker.Config.Path
-        dirUrl := filepath.Dir(kubeConfigUrl)
-        if _, exists := mountedPaths[dirUrl]; exists {
-            fmt.Printf("duplicate mount path: %s\n", dirUrl)
-        } else {
-            mountedPaths[dirUrl] = struct{}{}
-            workerParam.Env["KUBECONFIG"] = kubeConfigUrl
-        }
+        
 
         workerParam.Env["NAMESPACE"] = service.Namespace
         workerParam.Env["SERVICE_NAME"] = service.Name
@@ -663,7 +630,6 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
         workerParam.Env["LOG_LEVEL"] = logLevel
         workerParam.Env["NODE_NAME"] = edgeWorker.Template.Spec.NodeName
         workerParam.Env["DATA_PATH_PREFIX"] = "/home/data"
-        workerParam.Env["KUBECONFIG"] = "/home/data/.kube/config" // py中读取的kube_config文件位置
 
         workerParam.WorkerType = jointMultiEdgeForEdge
         workerParam.HostNetwork = true
@@ -690,11 +656,6 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
                 })
             }
 
-            // 添加~/.kube/config文件挂载配置
-            container.VolumeMounts = append(container.VolumeMounts, v1.VolumeMount{
-                Name:      "kubeconfig-volume",
-                MountPath: fmt.Sprintf("%s/%s", workerParam.Env["DATA_PATH_PREFIX"], ".kube"),
-            })
         }
 
         // create each edge deployment
@@ -721,17 +682,6 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
             },
         }
 
-        // 在 Template 的 PodSpec 中添加 Volumes
-        deployment.Spec.Template.Spec.Volumes = []v1.Volume{
-            {
-                Name: "kubeconfig-volume",
-                VolumeSource: v1.VolumeSource{
-                    HostPath: &v1.HostPathVolumeSource{
-                        Path: kubeConfigUrl,
-                    },
-                },
-            },
-        }
 
         for fileName, fileUrl := range fileMap {
             deployment.Spec.Template.Spec.Volumes = append(deployment.Spec.Template.Spec.Volumes, v1.Volume{
