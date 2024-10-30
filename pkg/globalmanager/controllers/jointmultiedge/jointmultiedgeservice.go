@@ -38,7 +38,6 @@ import (
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/klog/v2"
-	"strings"
 	k8scontroller "k8s.io/kubernetes/pkg/controller"
 
 	sednav1 "github.com/adayangolzz/sedna-modified/pkg/apis/sedna/v1alpha1"
@@ -439,7 +438,7 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService) e
     
     envMap := make(map[string]string)
     mountedPaths := make(map[string]struct{})
-    volumeCounter := 1 
+    volumeCounter := 0 
 
     // multiple file mount
     for _, path := range service.Spec.CloudWorker.File.Paths {
@@ -451,7 +450,7 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService) e
 
             volumeName := fmt.Sprintf("volume%d", volumeCounter)
 
-            envMap[fmt.Sprintf("VOLUME_%d", volumeCounter)] = dirPath
+            envMap[volumeName] = dirPath
 
             // 添加挂载配置
             workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
@@ -468,7 +467,7 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService) e
         }
     }
 
-    workerParam.Env["VOLUME_NUM"] = fmt.Sprintf("%d", volumeCounter-1)
+    
 
     workerParam.Env = map[string]string{
         "NAMESPACE":          service.Namespace,
@@ -477,6 +476,7 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService) e
         "NODE_NAME":         service.Spec.CloudWorker.Template.Spec.NodeName,
         "DATA_PATH_PREFIX":  "/home/data",
     }
+	workerParam.Env["VOLUME_NUM"] = fmt.Sprintf("%d", volumeCounter)
 
 	if len(cloudWorker.Template.Spec.Containers) == 0 {
 		return fmt.Errorf("containers in cloud worker template is empty")
@@ -501,6 +501,14 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService) e
             })
         }
     }
+
+	if cloudWorker.Template.ObjectMeta.Labels == nil {
+		cloudWorker.Template.ObjectMeta.Labels = make(map[string]string)
+	}
+	
+	cloudWorker.Template.ObjectMeta.Labels["kubernetes.io/hostname"] = cloudWorker.Template.Spec.NodeName
+	cloudWorker.Template.ObjectMeta.Labels["jointmultiedge.sedna.io/name"] = service.Name
+
 
     deployment := &appsv1.Deployment{
         ObjectMeta: metav1.ObjectMeta{
@@ -548,61 +556,62 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
 
     for _, edgeWorker := range service.Spec.EdgeWorker {
         var workerParam = runtime.WorkerParam{
-			Env:    make(map[string]string),
-			Mounts: make([]runtime.WorkerMount, 0),
-		}
-
+            Env:    make(map[string]string),
+            Mounts: make([]runtime.WorkerMount, 0),
+        }
         logLevel := edgeWorker.LogLevel.Level
 
+        envMap := make(map[string]string)
         mountedPaths := make(map[string]struct{})
-        volumeCounter := 1 // 用于生成环境变量名
+        volumeCounter := 0
 
-        for _, detail := range edgeWorker.File.Paths {
-            path := detail 
-            dirUrl := filepath.Dir(path)
+        // multiple file mount
+        for _, path := range edgeWorker.File.Paths {
+            dirPath := filepath.Dir(path)
 
-            if _, exists := mountedPaths[dirUrl]; !exists {
-                mountedPaths[dirUrl] = struct{}{}
+            // not exist
+            if _, exists := mountedPaths[dirPath]; !exists {
+                mountedPaths[dirPath] = struct{}{}
 
                 volumeName := fmt.Sprintf("volume%d", volumeCounter)
 
-                workerParam.Env[fmt.Sprintf("VOLUME_%d", volumeCounter)] = dirUrl
+                envMap[volumeName] = dirPath
 
+                // 添加挂载配置
                 workerParam.Mounts = append(workerParam.Mounts, runtime.WorkerMount{
                     URL: &runtime.MountURL{
-                        URL:                   dirUrl,
+                        URL:                   dirPath,
                         DownloadByInitializer: true,
                     },
                     Name: volumeName,
                     EnvName: volumeName,
                 })
 
+                workerParam.Env[fmt.Sprintf("VOLUME_%d", volumeCounter)] = dirPath
                 volumeCounter++
             }
         }
 
-        workerParam.Env["VOLUME_NUM"] = fmt.Sprintf("%d", volumeCounter-1)
+        
 
-        workerParam.Env["NAMESPACE"] = service.Namespace
-        workerParam.Env["SERVICE_NAME"] = service.Name
-        workerParam.Env["LC_SERVER"] = c.cfg.LC.Server
-        workerParam.Env["LOG_LEVEL"] = logLevel
-        workerParam.Env["NODE_NAME"] = edgeWorker.Template.Spec.NodeName
-        workerParam.Env["DATA_PATH_PREFIX"] = "/home/data"
+        workerParam.Env = map[string]string{
+            "NAMESPACE":          service.Namespace,
+            "SERVICE_NAME":       service.Name,
+            "LOG_LEVEL":         logLevel,
+            "NODE_NAME":         edgeWorker.Template.Spec.NodeName,
+            "DATA_PATH_PREFIX":  "/home/data",
+            "LC_SERVER":         c.cfg.LC.Server,
+        }
+		workerParam.Env["VOLUME_NUM"] = fmt.Sprintf("%d", volumeCounter)
 
-        workerParam.WorkerType = jointMultiEdgeForEdge
-        workerParam.HostNetwork = true
+        if len(edgeWorker.Template.Spec.Containers) == 0 {
+            return fmt.Errorf("containers in edge worker template is empty")
+        }
 
         for i := range edgeWorker.Template.Spec.Containers {
             container := &edgeWorker.Template.Spec.Containers[i]
 
-			if container.Env == nil {
-				container.Env = []v1.EnvVar{}
-			}
-			if container.VolumeMounts == nil {
-				container.VolumeMounts = []v1.VolumeMount{}
-			}
-
+            // inject env
             for key, value := range workerParam.Env {
                 container.Env = append(container.Env, v1.EnvVar{
                     Name:  key,
@@ -610,13 +619,12 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
                 })
             }
 
-            for volumeName, dirPath := range workerParam.Env {
-                if strings.HasPrefix(volumeName, "VOLUME_") {
-                    container.VolumeMounts = append(container.VolumeMounts, v1.VolumeMount{
-                        Name:      volumeName,
-                        MountPath: fmt.Sprintf("%s/%s", workerParam.Env["DATA_PATH_PREFIX"], filepath.Base(dirPath)),
-                    })
-                }
+            // mount file
+            for volumeName, _ := range envMap {
+                container.VolumeMounts = append(container.VolumeMounts, v1.VolumeMount{
+                    Name:      volumeName,
+                    MountPath: fmt.Sprintf("%s/%s", workerParam.Env["DATA_PATH_PREFIX"], volumeName),
+                })
             }
         }
 
@@ -642,19 +650,18 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
                 Template: edgeWorker.Template,
             },
         }
-		deployment.Spec.Template.Spec.Volumes = make([]v1.Volume, 0)
-		
-        for volumeName, dirPath := range workerParam.Env {
-            if strings.HasPrefix(volumeName, "VOLUME_") {
-                deployment.Spec.Template.Spec.Volumes = append(deployment.Spec.Template.Spec.Volumes, v1.Volume{
-                    Name: volumeName,
-                    VolumeSource: v1.VolumeSource{
-                        HostPath: &v1.HostPathVolumeSource{
-                            Path: dirPath,
-                        },
+
+        deployment.Spec.Template.Spec.Volumes = make([]v1.Volume, 0)
+
+        for volumeName, dirPath := range envMap {
+            deployment.Spec.Template.Spec.Volumes = append(deployment.Spec.Template.Spec.Volumes, v1.Volume{
+                Name: volumeName,
+                VolumeSource: v1.VolumeSource{
+                    HostPath: &v1.HostPathVolumeSource{
+                        Path: dirPath,
                     },
-                })
-            }
+                },
+            })
         }
 
         _, err := c.kubeClient.AppsV1().Deployments(service.Namespace).Create(context.TODO(), deployment, metav1.CreateOptions{})

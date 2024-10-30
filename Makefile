@@ -25,7 +25,7 @@ IMAGE_REPO ?= repo:5000/adayoung
 PLATFORMS ?= linux/amd64,linux/arm64
 COMPONENTS ?= gm lc kb
 
-IMAGE_TAG ?= v0.3.12-mid
+IMAGE_TAG ?= v0.3.12-mid-2
 GO_LDFLAGS ?= ""
 
 # set allowDangerousTypes for allowing float
