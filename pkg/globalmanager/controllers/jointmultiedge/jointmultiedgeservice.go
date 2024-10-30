@@ -440,6 +440,14 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService) e
     mountedPaths := make(map[string]struct{})
     volumeCounter := 0 
 
+	workerParam.Env = map[string]string{
+        "NAMESPACE":          service.Namespace,
+        "SERVICE_NAME":       service.Name,
+        "LOG_LEVEL":         logLevel,
+        "NODE_NAME":         service.Spec.CloudWorker.Template.Spec.NodeName,
+        "DATA_PATH_PREFIX":  "/home/data",
+    }
+
     // multiple file mount
     for _, path := range service.Spec.CloudWorker.File.Paths {
         dirPath := filepath.Dir(path)
@@ -469,13 +477,7 @@ func (c *Controller) createCloudWorker(service *sednav1.JointMultiEdgeService) e
 
     
 
-    workerParam.Env = map[string]string{
-        "NAMESPACE":          service.Namespace,
-        "SERVICE_NAME":       service.Name,
-        "LOG_LEVEL":         logLevel,
-        "NODE_NAME":         service.Spec.CloudWorker.Template.Spec.NodeName,
-        "DATA_PATH_PREFIX":  "/home/data",
-    }
+    
 	workerParam.Env["VOLUME_NUM"] = fmt.Sprintf("%d", volumeCounter)
 
 	if len(cloudWorker.Template.Spec.Containers) == 0 {
@@ -565,6 +567,15 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
         mountedPaths := make(map[string]struct{})
         volumeCounter := 0
 
+		workerParam.Env = map[string]string{
+            "NAMESPACE":          service.Namespace,
+            "SERVICE_NAME":       service.Name,
+            "LOG_LEVEL":         logLevel,
+            "NODE_NAME":         edgeWorker.Template.Spec.NodeName,
+            "DATA_PATH_PREFIX":  "/home/data",
+            "LC_SERVER":         c.cfg.LC.Server,
+        }
+		
         // multiple file mount
         for _, path := range edgeWorker.File.Paths {
             dirPath := filepath.Dir(path)
@@ -594,14 +605,7 @@ func (c *Controller) createEdgeWorker(service *sednav1.JointMultiEdgeService, bi
 
         
 
-        workerParam.Env = map[string]string{
-            "NAMESPACE":          service.Namespace,
-            "SERVICE_NAME":       service.Name,
-            "LOG_LEVEL":         logLevel,
-            "NODE_NAME":         edgeWorker.Template.Spec.NodeName,
-            "DATA_PATH_PREFIX":  "/home/data",
-            "LC_SERVER":         c.cfg.LC.Server,
-        }
+        
 		workerParam.Env["VOLUME_NUM"] = fmt.Sprintf("%d", volumeCounter)
 
         if len(edgeWorker.Template.Spec.Containers) == 0 {
