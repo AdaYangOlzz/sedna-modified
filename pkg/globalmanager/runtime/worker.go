@@ -271,6 +271,7 @@ func CreateEdgeMeshServiceCustome(kubeClient kubernetes.Interface, object Common
 	workerType := serviceConfig.Pos
 	labels := generateLabels(object, workerType)
 	labels["service.edgemesh.kubeedge.io/service-proxy-name"] = ""
+	klog.V(2).Infof("********New Sedna Version********")
 	serviceSpec := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
@@ -303,7 +304,7 @@ func CreateEdgeMeshServiceCustome(kubeClient kubernetes.Interface, object Common
 		return "", err
 	}
 
-	klog.V(2).Infof("Service %s is created successfully for %v %v/%v", service.Name, kind, namespace, name)
+	klog.V(2).Infof("[New] Service %s is created successfully for %v %v/%v", service.Name, kind, namespace, name)
 	return fmt.Sprintf("%s.%s", service.Name, service.Namespace), nil
 }
 
