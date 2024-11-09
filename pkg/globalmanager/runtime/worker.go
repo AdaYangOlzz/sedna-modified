@@ -15,7 +15,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
 	k8scontroller "k8s.io/kubernetes/pkg/controller"
-	sednav1 "github.com/adayangolzz/sedna-modified/pkg/apis/sedna/v1alpha1"
+	sednav1 "pkg/apis/sedna/v1alpha1"
 )
 
 type WorkerMount struct {
@@ -220,6 +220,7 @@ func CreateEdgeMeshService(kubeClient kubernetes.Interface, object CommonInterfa
 		},
 		Spec: v1.ServiceSpec{
 			Selector: generateLabels(object, workerType),
+			ExternalTrafficPolicy: v1.ServiceExternalTrafficPolicyTypeLocal,
 			Ports: []v1.ServicePort{
 				{
 					// TODO: be clean, Port.Name is currently required by edgemesh(v1.8.0).
@@ -268,6 +269,8 @@ func CreateEdgeMeshServiceCustome(kubeClient kubernetes.Interface, object Common
 	servicePort := serviceConfig.Port
 
 	workerType := serviceConfig.Pos
+	labels := generateLabels(object, workerType)
+	labels["service.edgemesh.kubeedge.io/service-proxy-name"] = ""
 	serviceSpec := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
@@ -275,11 +278,12 @@ func CreateEdgeMeshServiceCustome(kubeClient kubernetes.Interface, object Common
 			OwnerReferences: []metav1.OwnerReference{
 				*metav1.NewControllerRef(object, object.GroupVersionKind()),
 			},
-			Labels: generateLabels(object, workerType),
+			Labels: labels,
 		},
 		Spec: v1.ServiceSpec{
 			Selector: generateLabelsForSelector(object, workerType),
 			Type:     v1.ServiceTypeNodePort,
+			ExternalTrafficPolicy: v1.ServiceExternalTrafficPolicyTypeLocal,
 			Ports: []v1.ServicePort{
 				{
 					// TODO: be clean, Port.Name is currently required by edgemesh(v1.8.0).
