@@ -284,7 +284,7 @@ func CreateEdgeMeshServiceCustome(kubeClient kubernetes.Interface, object Common
 		Spec: v1.ServiceSpec{
 			Selector: generateLabelsForSelector(object, workerType),
 			Type:     v1.ServiceTypeNodePort,
-			ExternalTrafficPolicy: v1.ServiceExternalTrafficPolicyTypeLocal,
+			ExternalTrafficPolicy: v1.ServiceExternalTrafficPolicyTypeCluster,
 			Ports: []v1.ServicePort{
 				{
 					// TODO: be clean, Port.Name is currently required by edgemesh(v1.8.0).
