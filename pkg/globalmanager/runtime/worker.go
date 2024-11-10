@@ -15,7 +15,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/klog/v2"
 	k8scontroller "k8s.io/kubernetes/pkg/controller"
-	sednav1 "pkg/apis/sedna/v1alpha1"
+	sednav1 "github.com/adayangolzz/sedna-modified/pkg/apis/sedna/v1alpha1"
 )
 
 type WorkerMount struct {
