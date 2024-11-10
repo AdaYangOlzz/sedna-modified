@@ -270,7 +270,7 @@ func CreateEdgeMeshServiceCustome(kubeClient kubernetes.Interface, object Common
 
 	workerType := serviceConfig.Pos
 	labels := generateLabels(object, workerType)
-	labels["service.kubernetes.io/service-proxy-name"] = ""
+	labels["service.edgemesh.kubeedge.io/service-proxy-name"] = ""
 	klog.V(2).Infof("********New Sedna Version********")
 	serviceSpec := &v1.Service{
 		ObjectMeta: metav1.ObjectMeta{
